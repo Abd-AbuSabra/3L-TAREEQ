@@ -60,7 +60,7 @@ class MyApp2 extends StatelessWidget {
     return MaterialApp(
       title: '3l tareeq',
       debugShowCheckedModeBanner: false,
-      home: Pricing(),
+      home: invoice_SP(),
     );
   }
 }

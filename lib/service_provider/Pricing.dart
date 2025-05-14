@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 
 class Pricing extends StatefulWidget {
-  const Pricing({super.key});
+  final List<String> selectedServices;
+
+  const Pricing({Key? key, required this.selectedServices}) : super(key: key);
 
   @override
   State<Pricing> createState() => _PricingState();
@@ -12,61 +15,108 @@ class Pricing extends StatefulWidget {
 
 class _PricingState extends State<Pricing> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  Map<String, TextEditingController> _priceControllers = {};
-  List<String> _selectedServices = [];
-  bool isLoading = true;
+  final Map<String, TextEditingController> _priceControllers = {};
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadSelectedServices();
+    _initializeControllers();
   }
 
-  Future<void> _loadSelectedServices() async {
-    try {
-      final snapshot = await _firestore
-          .collection('service_applications')
-          .orderBy('timestamp', descending: true)
-          .limit(1)
-          .get();
-
-      if (snapshot.docs.isNotEmpty &&
-          snapshot.docs.first.data().containsKey('services')) {
-        final List<dynamic> services = snapshot.docs.first['services'];
-        setState(() {
-          _selectedServices = List<String>.from(services);
-          for (var service in _selectedServices) {
-            _priceControllers[service] = TextEditingController(text: "0 \JD");
-          }
-          isLoading = false;
-        });
-      } else {
-        setState(() => isLoading = false);
-      }
-    } catch (e) {
-      print("Error loading services: $e");
-      setState(() => isLoading = false);
+  void _initializeControllers() {
+    for (var service in widget.selectedServices) {
+      _priceControllers[service] = TextEditingController();
     }
+  }
+
+  @override
+  void dispose() {
+    // Dispose all controllers
+    for (var controller in _priceControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
   Future<void> _submitPricing() async {
     try {
-      final pricesMap = {
-        for (var entry in _priceControllers.entries) entry.key: entry.value.text
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception("User not signed in.");
+
+      // Create a map of services and their prices
+      final servicesWithPrices = <String, dynamic>{};
+
+      // Check that all fields are filled
+      bool allFieldsFilled = true;
+      for (var service in widget.selectedServices) {
+        final priceText = _priceControllers[service]?.text ?? '';
+        if (priceText.isEmpty) {
+          allFieldsFilled = false;
+          break;
+        }
+
+        // Try to parse as double to validate
+        try {
+          // Remove non-numeric characters like ' \JD'
+          final cleanedPrice = priceText.replaceAll(' \JD', '').trim();
+
+          // Check if the price is empty after cleaning
+          if (cleanedPrice.isEmpty) {
+            allFieldsFilled = false;
+            break;
+          }
+
+          // Parse the price (this handles both integers and decimals)
+          final price = double.tryParse(cleanedPrice);
+          if (price == null || price < 0) {
+            // Invalid price
+            throw Exception("Please enter a valid positive price.");
+          }
+
+          servicesWithPrices[service] = price;
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text("Please enter valid prices for all services")),
+          );
+          return;
+        }
+      }
+
+      if (!allFieldsFilled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Please enter prices for all services")),
+        );
+        return;
+      }
+
+      // Get the user document for basic information
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      if (!userDoc.exists) {
+        throw Exception("User not found in users collection.");
+      }
+
+      // Create service provider data
+      final providerData = {
+        ...userDoc.data()!, // Copy all user data
+        'services': servicesWithPrices,
+        'isServiceProvider': true,
+        'joinedAt': FieldValue.serverTimestamp(),
       };
 
-      final pricingData = {
-        'services': _selectedServices,
-        'prices': pricesMap,
-        'timestamp': FieldValue.serverTimestamp(),
-      };
+      // Create in providers collection with same user ID
+      await _firestore.collection('providers').doc(user.uid).set(providerData);
 
-      await _firestore.collection('service_pricing').add(pricingData);
+      // Delete user from users collection as they're now a provider
+      await _firestore.collection('users').doc(user.uid).delete();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Prices submitted successfully!")),
+        SnackBar(content: Text("You are now a service provider!")),
       );
+
+      // Navigate back to home or dashboard
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error saving pricing: $e")),
@@ -133,7 +183,8 @@ class _PricingState extends State<Pricing> {
     );
   }
 
-  Widget _buildServiceCard(String title, TextEditingController controller) {
+  Widget _buildServiceCard(
+      String title, TextEditingController controller, int index) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8),
       child: Card(
@@ -143,11 +194,13 @@ class _PricingState extends State<Pricing> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title,
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18)),
+              Text(
+                "$index. $title",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18),
+              ),
               Text(controller.text,
                   style: TextStyle(
                       color: Colors.white,
@@ -166,100 +219,100 @@ class _PricingState extends State<Pricing> {
   }
 
   @override
-  void dispose() {
-    _priceControllers.values.forEach((controller) => controller.dispose());
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: isLoading
-            ? Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                child: Column(
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(height: 15),
+              Container(height: 60, width: 60, child: logo()),
+              SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.all(30.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    SizedBox(height: 15),
-                    Container(height: 60, width: 60, child: logo()),
-                    SizedBox(height: 10),
-                    Padding(
-                      padding: const EdgeInsets.all(30.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            " we are happy to inform \n that you're a part of our community",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color.fromARGB(255, 192, 228, 194),
-                            ),
-                          )
-                        ],
+                    Text(
+                      "We are happy to inform \n that you're a part of our community",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 192, 228, 194),
                       ),
-                    ),
-                    ClipRRect(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(50),
-                        topRight: Radius.circular(50),
-                      ),
-                      child: Container(
-                        width: double.infinity,
-                        color: Color.fromRGBO(22, 121, 171, 1.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 50),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20.0),
-                              child: Text(
-                                "Please price your \nservices below:",
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 25,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            SizedBox(height: 40),
-                            Column(
-                              children: _selectedServices
-                                  .map((title) => _buildServiceCard(
-                                      title, _priceControllers[title]!))
-                                  .toList(),
-                            ),
-                            SizedBox(height: 200),
-                            Center(
-                              child: ElevatedButton(
-                                onPressed: _submitPricing,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      const Color.fromARGB(255, 7, 40, 89),
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 150, vertical: 15),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Done',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 50),
-                          ],
-                        ),
-                      ),
-                    ),
+                    )
                   ],
                 ),
               ),
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(50),
+                  topRight: Radius.circular(50),
+                ),
+                child: Container(
+                  width: double.infinity,
+                  color: Color.fromRGBO(22, 121, 171, 1.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 50),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Text(
+                          "Please price your \nservices below:",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 25,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      SizedBox(height: 40),
+                      Column(
+                        children: widget.selectedServices
+                            .asMap()
+                            .map((index, service) {
+                              return MapEntry(
+                                index,
+                                _buildServiceCard(
+                                    service,
+                                    _priceControllers[service]!,
+                                    index + 1), // 1-based index
+                              );
+                            })
+                            .values
+                            .toList(),
+                      ),
+                      SizedBox(height: 200),
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: _submitPricing,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color.fromARGB(255, 7, 40, 89),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 150, vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Text(
+                            'Done',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 50),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

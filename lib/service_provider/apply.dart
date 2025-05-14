@@ -69,12 +69,12 @@ class _ApplyState extends State<Apply> {
       }
 
       // Navigate to pricing page and pass the selected services directly
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => PricingPage(selectedServices: selectedServices),
-      //   ),
-      // );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Pricing(selectedServices: selectedServices),
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error submitting application: $e")),
