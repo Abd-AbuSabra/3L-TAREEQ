@@ -1,0 +1,70 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\user\\Downloads\\GP2 (Updated -3-)\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\user\\Downloads\\GP2 (Updated -3-)\\lib\\main.dart||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:lib\\main.dart||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\user\\Downloads\\GP2 (Updated -3-)\\lib\\user\\Register.dart||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:lib\\user\\Register.dart||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\user\\Downloads\\GP2 (Updated -3-)\\lib\\user\\login.dart||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:lib\\user\\login.dart||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Register.dart",
+              "DocumentMoniker": "C:\\Users\\user\\Downloads\\GP2 (Updated -3-)\\lib\\user\\Register.dart",
+              "RelativeDocumentMoniker": "lib\\user\\Register.dart",
+              "ToolTip": "C:\\Users\\user\\Downloads\\GP2 (Updated -3-)\\lib\\user\\Register.dart",
+              "RelativeToolTip": "lib\\user\\Register.dart",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-04-26T20:55:37.817Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "main.dart",
+              "DocumentMoniker": "C:\\Users\\user\\Downloads\\GP2 (Updated -3-)\\lib\\main.dart",
+              "RelativeDocumentMoniker": "lib\\main.dart",
+              "ToolTip": "C:\\Users\\user\\Downloads\\GP2 (Updated -3-)\\lib\\main.dart",
+              "RelativeToolTip": "lib\\main.dart",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-04-26T20:54:37.351Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "login.dart",
+              "DocumentMoniker": "C:\\Users\\user\\Downloads\\GP2 (Updated -3-)\\lib\\user\\login.dart",
+              "RelativeDocumentMoniker": "lib\\user\\login.dart",
+              "ToolTip": "C:\\Users\\user\\Downloads\\GP2 (Updated -3-)\\lib\\user\\login.dart",
+              "RelativeToolTip": "lib\\user\\login.dart",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-04-26T20:52:56.658Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
