@@ -7,14 +7,16 @@ class AuthService extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
-  
   Future<UserCredential> signInWithEmailAndPassword(
       String email, String password) async {
     try {
       UserCredential userCredential = await _firebaseAuth
           .signInWithEmailAndPassword(email: email, password: password);
 
-      await _firebaseFirestore.collection("users").doc(userCredential.user!.uid).set({
+      await _firebaseFirestore
+          .collection("users")
+          .doc(userCredential.user!.uid)
+          .set({
         "uid": userCredential.user!.uid,
         "email": email,
         "name": userCredential.user!.displayName ?? '',
@@ -27,15 +29,21 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<UserCredential> signUpWithEmailAndPassword(
-      String email, String password) async {
+      String email, String password,
+      {String? username, String? carBrandAndType}) async {
     try {
       UserCredential userCredential = await _firebaseAuth
           .createUserWithEmailAndPassword(email: email, password: password);
 
-      await _firebaseFirestore.collection("users").doc(userCredential.user!.uid).set({
+      await _firebaseFirestore
+          .collection("users")
+          .doc(userCredential.user!.uid)
+          .set({
         "uid": userCredential.user!.uid,
         "email": email,
-        "name": userCredential.user!.displayName ?? '',
+        "username": username ?? '',
+        "carBrandAndType": carBrandAndType ?? '',
+        "createdAt": FieldValue.serverTimestamp(),
       });
 
       return userCredential;
@@ -43,7 +51,6 @@ class AuthService extends ChangeNotifier {
       throw Exception("Sign up failed: ${e.message}");
     }
   }
-
 
   Future<UserCredential?> signInWithGoogle() async {
     final GoogleSignInAccount? gUser = await GoogleSignIn().signIn();
@@ -56,9 +63,13 @@ class AuthService extends ChangeNotifier {
     );
 
     try {
-      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final userCredential =
+          await _firebaseAuth.signInWithCredential(credential);
 
-      await _firebaseFirestore.collection("users").doc(userCredential.user!.uid).set({
+      await _firebaseFirestore
+          .collection("users")
+          .doc(userCredential.user!.uid)
+          .set({
         "uid": userCredential.user!.uid,
         "email": userCredential.user!.email,
         "name": userCredential.user!.displayName ?? '',
@@ -78,14 +89,12 @@ class AuthService extends ChangeNotifier {
     if (user == null) throw Exception("No user logged in");
 
     try {
-  
       await _firebaseFirestore.collection('userSelections').doc(user.uid).set({
         'services': selectedServices,
         'times': selectedTimes,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
- 
       await _firebaseFirestore.collection('serviceRequests').add({
         'userId': user.uid,
         'services': selectedServices,

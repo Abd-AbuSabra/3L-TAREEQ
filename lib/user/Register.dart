@@ -42,9 +42,9 @@ class _RegisterState extends State<Register> with TickerProviderStateMixin {
     try {
       // Attempt to sign up
       await authService.signUpWithEmailAndPassword(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
+          emailController.text.trim(), passwordController.text.trim(),
+          username: usernameController.text.trim(),
+          carBrandAndType: carBrandController.text.trim());
 
       // Show success message after successful registration
       ScaffoldMessenger.of(context).showSnackBar(
