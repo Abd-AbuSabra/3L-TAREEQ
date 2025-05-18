@@ -47,7 +47,7 @@ class _PricingState extends State<Pricing> {
       // Create a map of services and their prices
       final servicesWithPrices = <String, dynamic>{};
 
-      // Check that all fields are filled
+      // Check that all fields are filled and valid
       bool allFieldsFilled = true;
       for (var service in widget.selectedServices) {
         final priceText = _priceControllers[service]?.text ?? '';
@@ -56,21 +56,17 @@ class _PricingState extends State<Pricing> {
           break;
         }
 
-        // Try to parse as double to validate
         try {
           // Remove non-numeric characters like ' \JD'
           final cleanedPrice = priceText.replaceAll(' \JD', '').trim();
 
-          // Check if the price is empty after cleaning
           if (cleanedPrice.isEmpty) {
             allFieldsFilled = false;
             break;
           }
 
-          // Parse the price (this handles both integers and decimals)
           final price = double.tryParse(cleanedPrice);
           if (price == null || price < 0) {
-            // Invalid price
             throw Exception("Please enter a valid positive price.");
           }
 
@@ -103,12 +99,20 @@ class _PricingState extends State<Pricing> {
         'services': servicesWithPrices,
         'isServiceProvider': true,
         'joinedAt': FieldValue.serverTimestamp(),
+        'rating': 1,
       };
 
-      // Create in providers collection with same user ID
-      await _firestore.collection('providers').doc(user.uid).set(providerData);
+      // Reference to the provider document in 'providers' collection
+      final providerRef = _firestore.collection('providers').doc(user.uid);
 
-      // Delete user from users collection as they're now a provider
+      // Save provider data to Firestore
+      await providerRef.set(providerData);
+
+      // Optional: reference to the reviews subcollection (empty for now)
+      final reviewsRef = providerRef.collection('reviews');
+      // Note: No need to write anything now. Subcollection will be created when adding a review.
+
+      // Delete user document from 'users' collection
       await _firestore.collection('users').doc(user.uid).delete();
 
       ScaffoldMessenger.of(context).showSnackBar(

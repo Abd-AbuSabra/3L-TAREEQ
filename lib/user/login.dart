@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_33/service_provider/apply.dart';
+import 'package:flutter_application_33/service_provider/dashboard_SP.dart';
 import 'package:flutter_application_33/universal_components/Botton_nav_bar.dart';
 import 'package:flutter_application_33/components/auth_service.dart';
 import 'package:flutter_application_33/components/my_text_field.dart'; // Make sure to import your custom widget here
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_application_33/user/Register.dart';
 import 'package:flutter_application_33/user/Users_profile.dart';
+import 'package:flutter_application_33/user/search_for_service.dart';
+
 import 'package:flutter_application_33/user/dashboard_user.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -32,33 +36,62 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
-    final authService = Provider.of<AuthService>(context, listen: false);
 
     try {
-      // Try signing in the user with Firebase
+      // Sign in the user with Firebase Auth
       UserCredential userCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // If the login is successful, proceed with the dashboard
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login successful')),
-      );
+      final uid = userCredential.user!.uid;
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => users_profile()),
+      // Try to get the user from the 'users' collection
+      final userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      if (userDoc.exists) {
+        // User is a regular user
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login successful')),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const Apply()),
+        );
+        return;
+      }
+
+      // If not found in 'users', check 'providers'
+      final providerDoc = await FirebaseFirestore.instance
+          .collection('providers')
+          .doc(uid)
+          .get();
+
+      if (providerDoc.exists) {
+        // User is a service provider
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login successful as provider')),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const Dashboard_SP()),
+        );
+        return;
+      }
+
+      // If user doesn't exist in either collection
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User record not found in database')),
       );
     } catch (e) {
-      // Check if it's a FirebaseAuthException and handle specific errors
       if (e is FirebaseAuthException) {
         if (e.code == 'invalid-email') {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No user found with this email')),
           );
-        } else if (e.code == 'invalid-password') {
+        } else if (e.code == 'wrong-password') {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Incorrect password')),
           );
@@ -66,7 +99,6 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Login failed: ${e.code}')),
           );
-          print(e.message);
         }
       }
     }

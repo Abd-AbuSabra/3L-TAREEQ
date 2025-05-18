@@ -3,78 +3,103 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application_33/user/provider_reviews.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_application_33/user/service_prodiver_details.dart';
+import 'package:flutter_application_33/universal_components/loading.dart';
 
 class ServiceProviderPage extends StatelessWidget {
-  const ServiceProviderPage({super.key});
+  final List<String> selectedServices;
+
+  const ServiceProviderPage({super.key, required this.selectedServices});
+
+  Future<List<Map<String, dynamic>>> fetchMatchingProviders() async {
+    final querySnapshot =
+        await FirebaseFirestore.instance.collection('providers').get();
+
+    final allDocs = querySnapshot.docs;
+
+    List<Map<String, dynamic>> matchingProviders = [];
+
+    for (final doc in allDocs) {
+      final data = doc.data();
+
+      if (data.containsKey('services') && data['services'] is Map) {
+        final providerServices = Map<String, dynamic>.from(data['services']);
+
+        final matchesAllSelectedServices = selectedServices.every(
+          (service) => providerServices.containsKey(service),
+        );
+
+        if (matchesAllSelectedServices) {
+          matchingProviders.add(data);
+        }
+      }
+    }
+
+    return matchingProviders;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            SizedBox(height: 60, width: 60, child: logo()),
-            const SizedBox(height: 20),
-            const Padding(
-              padding: EdgeInsets.only(left: 40),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Service providers near you",
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 192, 228, 194),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: fetchMatchingProviders(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Loading(); // Show your custom loading page
+        }
+
+        final providers = snapshot.data!;
+
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                SizedBox(height: 60, width: 60, child: logo()),
+                const SizedBox(height: 20),
+                const Padding(
+                  padding: EdgeInsets.only(left: 40),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Service providers near you",
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 192, 228, 194),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('acceptedProviders')
-                    .orderBy('timestamp', descending: true)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        "No providers have accepted requests yet.",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    );
-                  }
-
-                  final docs = snapshot.data!.docs;
-
-                  return ListView.builder(
-                    itemCount: docs.length,
+                const SizedBox(height: 20),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: providers.length,
                     itemBuilder: (context, index) {
-                      final doc = docs[index];
-                      final data = doc.data() as Map<String, dynamic>;
-
-                      final providerName = data['providerName'] ?? 'No name';
-                      final services = (data['services'] as List?)?.join(', ') ?? 'No services';
-                      final rating = data['rating'] ?? 0;
+                      final provider = providers[index];
+                      final name = provider['username'] ?? 'No name';
+                      final rating = provider['rating'] ?? 1;
+                      final mobile = provider['mobile'] ?? '';
+                      final services = Map<String, dynamic>.from(
+                        provider['services'] ?? {},
+                      );
 
                       return GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ServiceProviderDetailsPage(),
+                              builder: (context) => ServiceProviderDetailsPage(
+                                name: name,
+                                rating: rating,
+                                mobile: mobile,
+                                services: services,
+                              ),
                             ),
                           );
                         },
                         child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 30, vertical: 10),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade100,
@@ -92,7 +117,8 @@ class ServiceProviderPage extends StatelessWidget {
                             children: [
                               const CircleAvatar(
                                 radius: 55,
-                                backgroundImage: AssetImage('assets/profile.jpg'),
+                                backgroundImage:
+                                    AssetImage('assets/profile.jpg'),
                               ),
                               const SizedBox(width: 20),
                               Expanded(
@@ -101,23 +127,19 @@ class ServiceProviderPage extends StatelessWidget {
                                   children: [
                                     const SizedBox(height: 10),
                                     Text(
-                                      providerName,
+                                      name,
                                       style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
+                                        color: Color.fromARGB(255, 7, 65, 115),
                                       ),
                                     ),
                                     const SizedBox(height: 30),
-                                    Text(
-                                      "Services: $services",
-                                      style: const TextStyle(color: Colors.black87),
-                                    ),
-                                    const SizedBox(height: 20),
                                     Row(
                                       children: List.generate(
                                         rating,
-                                        (index) => const Icon(Icons.star, color: Colors.amber, size: 18),
+                                        (index) => const Icon(Icons.star,
+                                            color: Colors.amber, size: 18),
                                       ),
                                     ),
                                     Row(
@@ -130,22 +152,26 @@ class ServiceProviderPage extends StatelessWidget {
                                               Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                  builder: (context) => ProviderReviewsPage(),
+                                                  builder: (context) =>
+                                                      ProviderReviewsPage(),
                                                 ),
                                               );
                                             },
                                             child: const Row(
-                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Text(
                                                   "Reviews",
                                                   style: TextStyle(
-                                                    color: Color.fromARGB(255, 7, 65, 115),
+                                                    color: Color.fromARGB(
+                                                        255, 7, 65, 115),
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
-                                                Icon(Icons.keyboard_arrow_right),
+                                                Icon(
+                                                    Icons.keyboard_arrow_right),
                                               ],
                                             ),
                                           ),
@@ -160,13 +186,13 @@ class ServiceProviderPage extends StatelessWidget {
                         ),
                       );
                     },
-                  );
-                },
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_application_33/universal_components/loading.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:animated_background/animated_background.dart';
 import 'package:flutter_application_33/components/auth_service.dart';
+import 'package:flutter_application_33/user/select_service_provider.dart';
 
 class SearchForService extends StatefulWidget {
   const SearchForService({super.key});
@@ -65,7 +66,10 @@ class _SearchForServiceState extends State<SearchForService>
 
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => Loading()),
+        MaterialPageRoute(
+            builder: (context) => ServiceProviderPage(
+                  selectedServices: selectedServiceTexts,
+                )),
       );
     } catch (e) {
       print("Error sending request: $e");

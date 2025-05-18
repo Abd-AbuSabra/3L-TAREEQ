@@ -1,46 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_application_33/pop_ups/rating.dart';
 import 'package:flutter_application_33/user/provider_reviews.dart';
 
-class ServiceProviderDetailsPage extends StatefulWidget {
-  const ServiceProviderDetailsPage({super.key});
+class ServiceProviderDetailsPage extends StatelessWidget {
+  final String name;
+  final double rating;
+  final String mobile;
+  final Map<String, dynamic> services;
 
-  @override
-  State<ServiceProviderDetailsPage> createState() => _ServiceProviderDetailsPageState();
-}
-
-class _ServiceProviderDetailsPageState extends State<ServiceProviderDetailsPage> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  Map<String, String> _servicePrices = {};
-  List<String> _services = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchPricingData();
-  }
-
-  Future<void> _fetchPricingData() async {
-    try {
-      final snapshot = await _firestore
-          .collection('service_pricing')
-          .orderBy('timestamp', descending: true)
-          .limit(1)
-          .get();
-
-      if (snapshot.docs.isNotEmpty) {
-        final data = snapshot.docs.first.data();
-        setState(() {
-          _services = List<String>.from(data['services'] ?? []);
-          _servicePrices = Map<String, String>.from(data['prices'] ?? {});
-        });
-      }
-    } catch (e) {
-      print("Error fetching pricing data: $e");
-    }
-  }
+  const ServiceProviderDetailsPage({
+    Key? key,
+    required this.name,
+    required this.rating,
+    required this.mobile,
+    required this.services,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -85,24 +60,21 @@ class _ServiceProviderDetailsPageState extends State<ServiceProviderDetailsPage>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const SizedBox(height: 20),
-                              const Text(
-                                "Service provider's name",
-                                style: TextStyle(
+                              Text(
+                                name,
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
+                                  color: Color.fromARGB(255, 7, 65, 115),
                                 ),
                               ),
                               const SizedBox(height: 15),
-                              const Row(
-                                children: [
-                                  SizedBox(width: 5),
-                                  Icon(Icons.star, color: Colors.yellow),
-                                  Icon(Icons.star, color: Colors.yellow),
-                                  Icon(Icons.star, color: Colors.yellow),
-                                  Icon(Icons.star, color: Colors.yellow),
-                                  Icon(Icons.star, color: Colors.yellow),
-                                ],
+                              Row(
+                                children: List.generate(
+                                  rating.floor(),
+                                  (index) => const Icon(Icons.star,
+                                      color: Colors.yellow),
+                                ),
                               ),
                               const SizedBox(height: 10),
                               Align(
@@ -112,7 +84,8 @@ class _ServiceProviderDetailsPageState extends State<ServiceProviderDetailsPage>
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => ProviderReviewsPage(),
+                                        builder: (context) =>
+                                            ProviderReviewsPage(),
                                       ),
                                     );
                                   },
@@ -123,7 +96,8 @@ class _ServiceProviderDetailsPageState extends State<ServiceProviderDetailsPage>
                                       Text(
                                         "Reviews",
                                         style: TextStyle(
-                                          color: Color.fromARGB(255, 7, 65, 115),
+                                          color:
+                                              Color.fromARGB(255, 7, 65, 115),
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -164,13 +138,13 @@ class _ServiceProviderDetailsPageState extends State<ServiceProviderDetailsPage>
                         ),
                       ),
                       const SizedBox(height: 40),
-                      if (_servicePrices.isNotEmpty)
-                        for (var service in _services)
-                          Padding(
+                      if (services.isNotEmpty)
+                        ...services.entries.map(
+                          (entry) => Padding(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 50.0, vertical: 8),
                             child: Text(
-                              "$service: ${_servicePrices[service] ?? 'Not set'}",
+                              "${entry.key}: ${entry.value}",
                               style: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.white,
@@ -178,7 +152,8 @@ class _ServiceProviderDetailsPageState extends State<ServiceProviderDetailsPage>
                               ),
                             ),
                           ),
-                      if (_servicePrices.isEmpty)
+                        ),
+                      if (services.isEmpty)
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 50.0),
                           child: Text(
@@ -190,31 +165,34 @@ class _ServiceProviderDetailsPageState extends State<ServiceProviderDetailsPage>
                             ),
                           ),
                         ),
-                  SizedBox(height: 200,),
-                        Row( mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                                    onPressed: (){},
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          const Color.fromARGB(255, 7, 40, 89),
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 120, vertical: 15),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'Contact',
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18),
-                                    ),
-                                  ),
-                          ],
-                        ),
-
+                      const SizedBox(height: 200),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              // Handle contact logic here if needed
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color.fromARGB(255, 7, 40, 89),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 120, vertical: 15),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              'Contact',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 300),
                     ],
                   ),

@@ -20,20 +20,19 @@ class _LoadingState extends State<Loading> {
   Future<void> loadData() async {
     try {
       // Simulate backend call (replace this with your actual backend logic)
-      await Future.delayed(Duration(seconds: 4)); 
+      await Future.delayed(Duration(seconds: 4));
 
       // Example: Replace the above with your real backend call
       // final result = await YourBackendService.getData();
 
       // When backend is done, navigate to the next page
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ServiceProviderPage()),
-        );
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => ServiceProviderPage()),
+        // );
       }
     } catch (e) {
-     
       print('Error during backend operation: $e');
     }
   }
