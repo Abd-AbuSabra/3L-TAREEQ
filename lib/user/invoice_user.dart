@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_33/pop_ups/rating.dart'; 
+import 'package:flutter_application_33/pop_ups/rating.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_application_33/user/Payment.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
@@ -16,7 +16,7 @@ class _Invoice_userState extends State<Invoice_user> {
 
   void handleConfirm() {
     if (selectedPayment == "Cash") {
-      Rating_popup(); 
+      // Rating_popup();
     }
   }
 
@@ -86,7 +86,8 @@ class _Invoice_userState extends State<Invoice_user> {
                             SizedBox(height: 6),
                             Row(
                               children: [
-                                Icon(Icons.location_on, color: Colors.red, size: 16),
+                                Icon(Icons.location_on,
+                                    color: Colors.red, size: 16),
                                 SizedBox(width: 5),
                                 Text(
                                   '"Amman, shafa badran,\nal-arab street"',
@@ -175,10 +176,12 @@ class _Invoice_userState extends State<Invoice_user> {
                             data: Theme.of(context).copyWith(
                               unselectedWidgetColor: Colors.grey[300],
                               radioTheme: RadioThemeData(
-                                fillColor: WidgetStateProperty.resolveWith<Color>(
-                                  (states) => states.contains(WidgetState.selected)
-                                      ? const Color(0xFF072859) 
-                                      : Colors.white,
+                                fillColor:
+                                    WidgetStateProperty.resolveWith<Color>(
+                                  (states) =>
+                                      states.contains(WidgetState.selected)
+                                          ? const Color(0xFF072859)
+                                          : Colors.white,
                                 ),
                               ),
                             ),
@@ -202,10 +205,12 @@ class _Invoice_userState extends State<Invoice_user> {
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: selectedPayment == "Cash" ? handleConfirm : null,
+                        onPressed:
+                            selectedPayment == "Cash" ? handleConfirm : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color.fromARGB(255, 7, 40, 89),
-                          padding: const EdgeInsets.symmetric(horizontal: 120, vertical: 18),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 120, vertical: 18),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -231,10 +236,11 @@ class _Invoice_userState extends State<Invoice_user> {
       bottomNavigationBar: CurvedNavigationBar(
         height: 40,
         backgroundColor: const Color.fromARGB(255, 192, 228, 194),
-        color:  const Color.fromARGB(255, 192, 228, 194),
+        color: const Color.fromARGB(255, 192, 228, 194),
         animationDuration: Duration(milliseconds: 300),
         items: [
-          Icon(Icons.chat_bubble_outline_rounded, size: 25, color: Colors.white),
+          Icon(Icons.chat_bubble_outline_rounded,
+              size: 25, color: Colors.white),
           Icon(Icons.home_rounded, size: 25, color: Colors.white),
           Icon(Icons.person_2_rounded, size: 25, color: Colors.white),
         ],

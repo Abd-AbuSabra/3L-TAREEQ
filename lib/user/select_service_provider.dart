@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_application_33/user/provider_reviews.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_application_33/user/service_prodiver_details.dart';
@@ -10,40 +11,52 @@ class ServiceProviderPage extends StatelessWidget {
 
   const ServiceProviderPage({super.key, required this.selectedServices});
 
-  Future<List<Map<String, dynamic>>> fetchMatchingProviders() async {
-    final querySnapshot =
-        await FirebaseFirestore.instance.collection('providers').get();
+  Stream<List<Map<String, dynamic>>> streamMatchingProviders() {
+    return FirebaseFirestore.instance.collection('providers').snapshots().map(
+      (querySnapshot) {
+        final allDocs = querySnapshot.docs;
 
-    final allDocs = querySnapshot.docs;
+        List<Map<String, dynamic>> matchingProviders = [];
 
-    List<Map<String, dynamic>> matchingProviders = [];
+        for (final doc in allDocs) {
+          final data = doc.data();
 
-    for (final doc in allDocs) {
-      final data = doc.data();
+          if (data.containsKey('services') && data['services'] is Map) {
+            final providerServices =
+                Map<String, dynamic>.from(data['services']);
 
-      if (data.containsKey('services') && data['services'] is Map) {
-        final providerServices = Map<String, dynamic>.from(data['services']);
+            final matchesAllSelectedServices = selectedServices.every(
+              (service) => providerServices.containsKey(service),
+            );
 
-        final matchesAllSelectedServices = selectedServices.every(
-          (service) => providerServices.containsKey(service),
-        );
+            if (matchesAllSelectedServices) {
+              // Add provider ID for navigation
+              final providerData = Map<String, dynamic>.from(data);
+              providerData['uid'] = doc.id;
 
-        if (matchesAllSelectedServices) {
-          matchingProviders.add(data);
+              matchingProviders.add(providerData);
+            }
+          }
         }
-      }
-    }
 
-    return matchingProviders;
+        return matchingProviders;
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: fetchMatchingProviders(),
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: streamMatchingProviders(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Loading(); // Show your custom loading page
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Loading();
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Scaffold(
+            body: Center(child: Text("No providers found.")),
+          );
         }
 
         final providers = snapshot.data!;
@@ -77,11 +90,23 @@ class ServiceProviderPage extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final provider = providers[index];
                       final name = provider['username'] ?? 'No name';
-                      final rating = provider['rating'] ?? 1;
                       final mobile = provider['mobile'] ?? '';
                       final services = Map<String, dynamic>.from(
                         provider['services'] ?? {},
                       );
+
+                      final rawRating = provider['averageRating'];
+                      double avgRating;
+
+                      if (rawRating == null) {
+                        avgRating = 1.0;
+                      } else if (rawRating is int) {
+                        avgRating = rawRating.toDouble();
+                      } else if (rawRating is double) {
+                        avgRating = rawRating;
+                      } else {
+                        avgRating = 1.0;
+                      }
 
                       return GestureDetector(
                         onTap: () {
@@ -90,7 +115,7 @@ class ServiceProviderPage extends StatelessWidget {
                             MaterialPageRoute(
                               builder: (context) => ServiceProviderDetailsPage(
                                 name: name,
-                                rating: rating,
+                                rating: avgRating,
                                 mobile: mobile,
                                 services: services,
                                 providerId: provider['uid'],
@@ -135,14 +160,18 @@ class ServiceProviderPage extends StatelessWidget {
                                         color: Color.fromARGB(255, 7, 65, 115),
                                       ),
                                     ),
-                                    const SizedBox(height: 30),
-                                    Row(
-                                      children: List.generate(
-                                        rating,
-                                        (index) => const Icon(Icons.star,
-                                            color: Colors.amber, size: 18),
+                                    const SizedBox(height: 20),
+                                    RatingBarIndicator(
+                                      rating: avgRating,
+                                      itemBuilder: (context, _) => const Icon(
+                                        Icons.star,
+                                        color: Colors.amber,
                                       ),
+                                      itemCount: 5,
+                                      itemSize: 18,
+                                      direction: Axis.horizontal,
                                     ),
+                                    const SizedBox(height: 10),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [

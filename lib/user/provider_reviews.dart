@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:animated_background/animated_background.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class ProviderReviewsPage extends StatefulWidget {
   final String providerId;
@@ -164,17 +165,15 @@ class _ProviderReviewsPageState extends State<ProviderReviewsPage>
                                       ),
                                     ),
                                     const SizedBox(height: 12),
-                                    Row(
-                                      children: List.generate(
-                                        5,
-                                        (i) => Icon(
-                                          Icons.star,
-                                          color: i < review["rating"]
-                                              ? Colors.amber
-                                              : Colors.grey[300],
-                                          size: 20,
-                                        ),
+                                    RatingBarIndicator(
+                                      rating: review["rating"].toDouble(),
+                                      itemBuilder: (context, index) => Icon(
+                                        Icons.star,
+                                        color: Colors.amber,
                                       ),
+                                      itemCount: 5,
+                                      itemSize: 20.0,
+                                      direction: Axis.horizontal,
                                     )
                                   ],
                                 ),

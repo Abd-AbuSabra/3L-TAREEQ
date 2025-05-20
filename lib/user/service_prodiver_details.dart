@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_application_33/pop_ups/rating.dart';
 import 'package:flutter_application_33/user/provider_reviews.dart';
@@ -71,12 +72,15 @@ class ServiceProviderDetailsPage extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 15),
-                              Row(
-                                children: List.generate(
-                                  rating.floor(),
-                                  (index) => const Icon(Icons.star,
-                                      color: Colors.yellow),
+                              RatingBarIndicator(
+                                rating: rating,
+                                itemBuilder: (context, _) => const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
                                 ),
+                                itemCount: 5,
+                                itemSize: 25,
+                                direction: Axis.horizontal,
                               ),
                               const SizedBox(height: 10),
                               Align(
@@ -174,7 +178,13 @@ class ServiceProviderDetailsPage extends StatelessWidget {
                         children: [
                           ElevatedButton(
                             onPressed: () {
-                              // Handle contact logic here if needed
+                              showDialog(
+                                context: context,
+                                builder: (context) => Rating_popup(
+                                  providerId: providerId,
+                                  username: name,
+                                ),
+                              );
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor:
