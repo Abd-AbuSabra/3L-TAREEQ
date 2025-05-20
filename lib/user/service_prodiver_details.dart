@@ -7,6 +7,7 @@ class ServiceProviderDetailsPage extends StatelessWidget {
   final String name;
   final double rating;
   final String mobile;
+  final String providerId;
   final Map<String, dynamic> services;
 
   const ServiceProviderDetailsPage({
@@ -15,6 +16,7 @@ class ServiceProviderDetailsPage extends StatelessWidget {
     required this.rating,
     required this.mobile,
     required this.services,
+    required this.providerId,
   }) : super(key: key);
 
   @override
@@ -85,7 +87,8 @@ class ServiceProviderDetailsPage extends StatelessWidget {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
-                                            ProviderReviewsPage(),
+                                            ProviderReviewsPage(
+                                                providerId: providerId),
                                       ),
                                     );
                                   },

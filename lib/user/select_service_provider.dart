@@ -93,6 +93,7 @@ class ServiceProviderPage extends StatelessWidget {
                                 rating: rating,
                                 mobile: mobile,
                                 services: services,
+                                providerId: provider['uid'],
                               ),
                             ),
                           );
@@ -153,7 +154,9 @@ class ServiceProviderPage extends StatelessWidget {
                                                 context,
                                                 MaterialPageRoute(
                                                   builder: (context) =>
-                                                      ProviderReviewsPage(),
+                                                      ProviderReviewsPage(
+                                                    providerId: provider['uid'],
+                                                  ),
                                                 ),
                                               );
                                             },

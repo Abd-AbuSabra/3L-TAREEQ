@@ -1,35 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:animated_background/animated_background.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProviderReviewsPage extends StatefulWidget {
-  ProviderReviewsPage({super.key});
-
+  final String providerId;
+  const ProviderReviewsPage({super.key, required this.providerId});
   @override
   State<ProviderReviewsPage> createState() => _ProviderReviewsPageState();
 }
 
-class _ProviderReviewsPageState extends State<ProviderReviewsPage> with TickerProviderStateMixin {
-  final List<Map<String, dynamic>> reviews = [
-    {
-      "initials": "AJ",
-      "color": Colors.teal,
-      "text": "Finding an honest mechanic can be tough, and he exceeded my expectations.",
-      "rating": 5,
-    },
-    {
-      "initials": "HH",
-      "color": Colors.deepPurple,
-      "text": "I had an excellent experience. My car was making strange noises, and they quickly diagnosed and fixed the issue.",
-      "rating": 4,
-    },
-    {
-      "initials": "QK",
-      "color": Colors.redAccent,
-      "text": "I was worried about the cost of my car repairs, yet been given a clear estimate upfront and stuck to it.",
-      "rating": 5,
-    },
-  ];
+class _ProviderReviewsPageState extends State<ProviderReviewsPage>
+    with TickerProviderStateMixin {
+  List<Map<String, dynamic>> reviews = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchReviews();
+  }
+
+  Future<void> fetchReviews() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('providers')
+          .doc(widget.providerId)
+          .collection('reviews')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      final fetchedReviews = snapshot.docs
+          .where((doc) => doc.exists && doc.data().isNotEmpty)
+          .map((doc) {
+        final data = doc.data();
+        final username = data['username'] ?? '??';
+        return {
+          'initials': username.length >= 2
+              ? username.substring(0, 2).toUpperCase()
+              : username.toUpperCase(),
+          'color': Colors.primaries[reviews.length % Colors.primaries.length],
+          'text': data['text'] ?? '',
+          'rating': data['rating'] ?? 0,
+        };
+      }).toList();
+
+      setState(() {
+        reviews = fetchedReviews;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching reviews: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +117,7 @@ class _ProviderReviewsPageState extends State<ProviderReviewsPage> with TickerPr
                     children: AnimationConfiguration.toStaggeredList(
                       duration: const Duration(milliseconds: 1600),
                       childAnimationBuilder: (widget) => SlideAnimation(
-                         horizontalOffset: 120.0,
+                        horizontalOffset: 120.0,
                         child: FadeInAnimation(child: widget),
                       ),
                       children: reviews.map((review) {
@@ -118,7 +144,10 @@ class _ProviderReviewsPageState extends State<ProviderReviewsPage> with TickerPr
                                 backgroundColor: review["color"],
                                 child: Text(
                                   review["initials"],
-                                  style: const TextStyle(color: Colors.white,fontSize: 23,fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 23,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                               const SizedBox(width: 30),

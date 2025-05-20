@@ -105,6 +105,8 @@ class _PricingState extends State<Pricing> {
       // Reference to the provider document in 'providers' collection
       final providerRef = _firestore.collection('providers').doc(user.uid);
 
+      await providerRef.collection('reviews').add({});
+
       // Save provider data to Firestore
       await providerRef.set(providerData);
 
