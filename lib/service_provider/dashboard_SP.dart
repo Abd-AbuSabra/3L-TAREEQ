@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:intl/intl.dart';
 
 class Dashboard_SP extends StatefulWidget {
   const Dashboard_SP({super.key});
@@ -10,22 +13,56 @@ class Dashboard_SP extends StatefulWidget {
 }
 
 class _Dashboard_SPState extends State<Dashboard_SP> {
-  final TextEditingController providerNameController =
-      TextEditingController(text: "Tariq Al-Rashid");
-  final int providerRating = 5;
+  String providerName = 'Provider';
+  double providerRating = 0;
+  String joinedDateString = '';
+
   final TextEditingController reviewController = TextEditingController();
 
   @override
-  void dispose() {
-    providerNameController.dispose();
-    reviewController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    loadProviderData();
   }
 
-  Future<void> acceptServiceRequest(String docId, Map<String, dynamic> data) async {
+  Future<void> loadProviderData() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final providerDoc = await FirebaseFirestore.instance
+          .collection('providers')
+          .doc(user.uid)
+          .get();
+
+      if (providerDoc.exists) {
+        final data = providerDoc.data()!;
+        setState(() {
+          providerName = data['username'] ?? 'Unnamed Provider';
+          providerRating = data['rating'] ?? 0;
+
+          final Timestamp? joinedAt = data['joinedAt'];
+          if (joinedAt != null) {
+            final DateTime joinedDate = joinedAt.toDate();
+            joinedDateString =
+                'Joined: ${DateFormat.yMMMMd().format(joinedDate)}';
+          } else {
+            joinedDateString = 'Joined: Unknown';
+          }
+        });
+      } else {
+        print("Provider document not found for uid: ${user.uid}");
+      }
+    } catch (e) {
+      print("Failed to load provider data: $e");
+    }
+  }
+
+  Future<void> acceptServiceRequest(
+      String docId, Map<String, dynamic> data) async {
     try {
       await FirebaseFirestore.instance.collection('acceptedProviders').add({
-        'providerName': providerNameController.text,
+        'providerName': providerName,
         'services': data['services'] ?? [],
         'times': data['times'] ?? [],
         'rating': providerRating,
@@ -101,24 +138,34 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextField(
-                      controller: providerNameController,
+                    Text(
+                      providerName,
                       style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey),
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 7, 65, 115),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        providerRating,
-                        (index) =>
-                            const Icon(Icons.star, color: Colors.yellow),
+                    const SizedBox(height: 6),
+                    RatingBarIndicator(
+                      rating: providerRating,
+                      itemBuilder: (context, index) => Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                      ),
+                      itemCount: 5,
+                      itemSize: 20.0,
+                      direction: Axis.horizontal,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      joinedDateString,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 7, 65, 115),
                       ),
                     ),
                   ],
@@ -233,8 +280,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
                                       .delete();
                                 },
                                 child: Text('Decline',
-                                    style:
-                                        TextStyle(color: Colors.red[800])),
+                                    style: TextStyle(color: Colors.red[800])),
                               ),
                               const SizedBox(width: 8),
                               TextButton(
@@ -270,14 +316,14 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
     return Container(
       height: 128,
       width: 180,
-      decoration: BoxDecoration(
-          color: color, borderRadius: BorderRadius.circular(20)),
+      decoration:
+          BoxDecoration(color: color, borderRadius: BorderRadius.circular(20)),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(title,
-              style:
-                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Text(value,
               style: const TextStyle(
