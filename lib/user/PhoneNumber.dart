@@ -1,15 +1,9 @@
+import 'dart:developer';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
-import 'package:intl_phone_field/intl_phone_field.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:animated_background/animated_background.dart'; 
-import 'package:flutter_application_33/main.dart';
 import 'package:flutter_application_33/user/OTTP.dart';
-import 'package:provider/provider.dart'; 
-import 'package:intl_phone_field/countries.dart';
-import 'package:flutter_application_33/components/authprovider.dart';
-
-import 'Register.dart';
+import 'package:animated_background/animated_background.dart';
 
 class PN extends StatefulWidget {
   const PN({super.key});
@@ -18,18 +12,9 @@ class PN extends StatefulWidget {
   _PNState createState() => _PNState();
 }
 
-
-class AuthProvider with ChangeNotifier {
-  void signInWithPhone(BuildContext context, String phoneNumber) {
-    print('Sending OTP to $phoneNumber');
-  }
-}
-
-class _PNState extends State<PN> with TickerProviderStateMixin { 
+class _PNState extends State<PN> with TickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey();
-  final FocusNode focusNode = FocusNode();
-  final TextEditingController phoneController = TextEditingController();
-  late Country selectedCountry; // ADD THIS
+  final TextEditingController _phoneController = TextEditingController();
   final Color customGreen = const Color.fromARGB(255, 192, 228, 194);
 
   @override
@@ -38,8 +23,8 @@ class _PNState extends State<PN> with TickerProviderStateMixin {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(
-          color: const Color.fromARGB(255, 144, 223, 170),
+        leading: const BackButton(
+          color: Color.fromARGB(255, 144, 223, 170),
         ),
       ),
       backgroundColor: Colors.white,
@@ -54,7 +39,7 @@ class _PNState extends State<PN> with TickerProviderStateMixin {
             particleCount: 3,
             spawnOpacity: 0.1,
             maxOpacity: 0.1,
-            baseColor: const Color.fromARGB(255, 192, 228, 194),
+            baseColor: customGreen,
           ),
         ),
         child: Padding(
@@ -65,78 +50,53 @@ class _PNState extends State<PN> with TickerProviderStateMixin {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 const SizedBox(height: 30),
-                SizedBox(
-                  width: 100,
-                  height: 100,
-                  child: logo(),
-                ),
+                SizedBox(width: 100, height: 100, child: logo()),
                 const SizedBox(height: 100),
                 const Text(
                   "Enter your phone number",
                   style: TextStyle(
-                      fontSize: 28,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold),
+                    fontSize: 28,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const Text(
-                  "we'll send you a 4-digit verification code",
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey,
-                  ),
+                  "We'll send you a verification code",
+                  style: TextStyle(fontSize: 13, color: Colors.grey),
                 ),
                 const SizedBox(height: 80),
-                IntlPhoneField(
-                  focusNode: focusNode,
-                  controller: phoneController, 
-                  decoration: InputDecoration(
-                    labelText: 'Phone Number',
-                    labelStyle: TextStyle(color: customGreen),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                          color: const Color.fromARGB(255, 192, 228, 194),
-                          width: 2.0),
-                      borderRadius: BorderRadius.circular(10),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      height: 50,
+                      width: 50,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: customGreen),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Image.asset('lib/images/jordan.png',
+                          height: 20, width: 20),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                          color: const Color.fromARGB(255, 192, 228, 194),
-                          width: 1.5),
-                      borderRadius: BorderRadius.circular(10),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: customGreen),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: TextField(
+                          controller: _phoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: '+962xxxxxxxxx',
+                          ),
+                        ),
+                      ),
                     ),
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(
-                          color: const Color.fromARGB(255, 192, 228, 194)),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    suffixIcon: phoneController.text.length > 9
-                        ? Container(
-                            height: 30,
-                            width: 30,
-                            margin: const EdgeInsets.all(10.0),
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.green,
-                            ),
-                            child: const Icon(
-                              Icons.done,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          )
-                        : null,
-                  ),
-                  languageCode: "en",
-                  onChanged: (phone) {
-                    setState(() {}); 
-                    print(phone.completeNumber);
-                  },
-                  onCountryChanged: (country) {
-                    setState(() {
-                      selectedCountry = country; 
-                    });
-                    print('Country changed to: ${country.name}');
-                  },
+                  ],
                 ),
                 const SizedBox(height: 50),
                 MaterialButton(
@@ -147,10 +107,33 @@ class _PNState extends State<PN> with TickerProviderStateMixin {
                   ),
                   color: customGreen,
                   textColor: Colors.white,
-                  onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      sendPhoneNumber();
-                    }
+                  onPressed: () async {
+                    final phone = _phoneController.text.trim();
+                    if (phone.isEmpty) return;
+
+                    await FirebaseAuth.instance.verifyPhoneNumber(
+                      phoneNumber: phone,
+                      verificationCompleted:
+                          (PhoneAuthCredential credential) async {},
+                      verificationFailed: (FirebaseAuthException e) {
+                        log("Verification failed: ${e.message}");
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Error: ${e.message}")),
+                        );
+                      },
+                      codeSent: (String verificationId, int? resendToken) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                OTPPage(verificationId: verificationId),
+                          ),
+                        );
+                      },
+                      codeAutoRetrievalTimeout: (String verificationId) {
+                        log("Code auto-retrieval timeout.");
+                      },
+                    );
                   },
                   child: const Text(
                     'Submit',
@@ -163,11 +146,5 @@ class _PNState extends State<PN> with TickerProviderStateMixin {
         ),
       ),
     );
-  }
-
-  void sendPhoneNumber() {
-    final ap = Provider.of<AuthProvider>(context, listen: false);
-    String phoneNumber = phoneController.text.trim();
-    ap.signInWithPhone(context, "+${selectedCountry.dialCode}$phoneNumber"); 
   }
 }

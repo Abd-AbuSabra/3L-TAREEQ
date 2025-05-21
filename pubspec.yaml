@@ -34,7 +34,7 @@ dependencies:
   firebase_core: ^3.13.0
   firebase_auth: ^5.5.3
   firebase_auth_web: ^5.8.13
-  intl: ^0.18.1
+  flutter_gemini: ^3.0.0
   js: ^0.7.1
   cupertino_icons: ^1.0.6
   curved_navigation_bar: ^1.0.6
@@ -51,6 +51,10 @@ dependencies:
   intl_phone_number_field: ^0.2.1
   pinput: ^5.0.1
   location: ^6.0.2
+  dash_chat_2: ^0.0.21
+  circular_menu: ^4.0.0
+
+  chat_gpt_sdk: ^3.1.5
   google_sign_in: ^6.2.2
   provider: ^6.1.4
   animated_background: ^2.0.0

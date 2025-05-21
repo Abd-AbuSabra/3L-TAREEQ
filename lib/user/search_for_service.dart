@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_33/universal_components/loading.dart';
+import 'package:flutter_application_33/universal_components/Menu.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:animated_background/animated_background.dart';
 import 'package:flutter_application_33/components/auth_service.dart';
@@ -67,9 +67,10 @@ class _SearchForServiceState extends State<SearchForService>
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => ServiceProviderPage(
-                  selectedServices: selectedServiceTexts,
-                )),
+          builder: (context) => ServiceProviderPage(
+            selectedServices: selectedServiceTexts,
+          ),
+        ),
       );
     } catch (e) {
       print("Error sending request: $e");
@@ -78,31 +79,33 @@ class _SearchForServiceState extends State<SearchForService>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: AnimatedBackground(
-        vsync: this,
-        behaviour: RandomParticleBehaviour(
-          options: ParticleOptions(
-            spawnMaxRadius: 200,
-            spawnMinRadius: 10,
-            spawnMinSpeed: 10,
-            spawnMaxSpeed: 15,
-            particleCount: 5,
-            spawnOpacity: 0.1,
-            maxOpacity: 0.1,
-            baseColor: const Color.fromARGB(255, 192, 228, 194),
+    return Menu(
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: AnimatedBackground(
+          vsync: this,
+          behaviour: RandomParticleBehaviour(
+            options: ParticleOptions(
+              spawnMaxRadius: 200,
+              spawnMinRadius: 10,
+              spawnMinSpeed: 10,
+              spawnMaxSpeed: 15,
+              particleCount: 5,
+              spawnOpacity: 0.1,
+              maxOpacity: 0.1,
+              baseColor: const Color.fromARGB(255, 192, 228, 194),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                SizedBox(height: 80, width: 80, child: logo()),
-                const SizedBox(height: 50),
-                buildServiceSelection(),
-              ],
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  SizedBox(height: 80, width: 80, child: logo()),
+                  const SizedBox(height: 50),
+                  buildServiceSelection(),
+                ],
+              ),
             ),
           ),
         ),

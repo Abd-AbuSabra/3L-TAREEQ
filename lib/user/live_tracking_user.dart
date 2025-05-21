@@ -1,13 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:flutter_application_33/circles/battery_circle.dart';
-import 'package:flutter_application_33/circles/gas_circle_.dart';
-import 'package:flutter_application_33/circles/tile_circle.dart';
 import 'package:flutter_application_33/google_maps/map.dart';
-import 'package:flutter_application_33/google_maps/user_map.dart';
-import 'package:flutter_application_33/pop_over/my_buuton.dart';
-import 'package:flutter_application_33/universal_components/project_logo.dart';
-import 'package:flutter_application_33/user/search_for_service.dart';
 
 class live_track_user extends StatefulWidget {
   const live_track_user({super.key});
@@ -25,12 +17,12 @@ class _live_track_userState extends State<live_track_user> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(
+              const SizedBox(
                 height: 620,
-                child: Map_track(),
+                child: MapTrack(),
               ),
               ClipRRect(
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(50),
                   topRight: Radius.circular(50),
                 ),
@@ -39,137 +31,173 @@ class _live_track_userState extends State<live_track_user> {
                   color: const Color.fromARGB(255, 192, 228, 194),
                   child: Column(
                     children: [
-                      SizedBox(height: 15),
-                      Padding(
-                        padding: const EdgeInsets.all(15.0),
-                        child: Row(
-                          //mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 40,
+                      const SizedBox(height: 30),
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            height: 230,
+                            width: 350,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(18),
                             ),
-                            Container(
-                              height: 55,
-                              width: 300,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(15),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Stack(
+                                children: [
+                                  Positioned(
+                                    top: 0,
+                                    right: 0,
+                                    child: IconButton(
+                                      onPressed: () {},
+                                      icon: const Icon(Icons.close),
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const CircleAvatar(
+                                            backgroundColor: Color.fromARGB(
+                                                255, 219, 218, 218),
+                                            radius: 45,
+                                            backgroundImage: AssetImage(
+                                                'assets/profile.jpg'),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          const Text(
+                                            "Rating: 4.8",
+                                            style: TextStyle(
+                                              color: Color.fromRGBO(
+                                                  22, 121, 171, 1.0),
+                                            ),
+                                          ),
+                                          const Row(
+                                            children: [
+                                              Icon(Icons.star,
+                                                  color: Colors.yellow,
+                                                  size: 15),
+                                              Icon(Icons.star,
+                                                  color: Colors.yellow,
+                                                  size: 15),
+                                              Icon(Icons.star,
+                                                  color: Colors.yellow,
+                                                  size: 15),
+                                              Icon(Icons.star,
+                                                  color: Colors.yellow,
+                                                  size: 15),
+                                              Icon(Icons.star,
+                                                  color: Colors.yellow,
+                                                  size: 15),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(width: 30),
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'SP Name',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color.fromRGBO(
+                                                    22, 121, 171, 1.0),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            const Text(
+                                              'Service',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                color: Color.fromRGBO(
+                                                    22, 121, 171, 1.0),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 20),
+                                            Row(
+                                              children: [
+                                                Card(
+                                                  child: IconButton(
+                                                    onPressed: () {},
+                                                    icon: const Icon(
+                                                      Icons.message_rounded,
+                                                      color: Color.fromRGBO(
+                                                          22, 121, 171, 1.0),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 16),
+                                                Card(
+                                                  child: IconButton(
+                                                    onPressed: () {},
+                                                    icon: const Icon(
+                                                      Icons.call,
+                                                      color: Color.fromRGBO(
+                                                          22, 121, 171, 1.0),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ],
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(6.0),
+                            ),
+                          ),
+                          Positioned(
+                            top: -20,
+                            left: 0,
+                            right: 0,
+                            child: Center(
+                              child: Container(
+                                height: 40,
+                                width: 200,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black12,
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
                                 child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: const [
-                                    Text(
-                                      "Help is on the way",
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'Help is on the way !',
                                       style: TextStyle(
-                                        color: const Color.fromARGB(
-                                            255, 192, 228, 194),
-                                        fontWeight: FontWeight.bold,
                                         fontSize: 18,
+                                        color:
+                                            Color.fromRGBO(22, 121, 171, 1.0),
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-                            SizedBox(
-                              width: 5,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                MyButton(),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            height: 150,
-                            width: 350,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(6.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
-                                  Row(
-                                    children: [
-                                      const CircleAvatar(
-                                        backgroundColor: Colors.white,
-                                        radius: 50,
-                                        backgroundImage:
-                                            AssetImage('assets/profile.jpg'),
-                                      ),
-                                      const SizedBox(width: 20),
-                                      Column(
-                                        children: const [
-                                          SizedBox(height: 20),
-                                          Text(
-                                            'ayah',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                          SizedBox(height: 6),
-                                          Row(
-                                            children: [
-                                              Text(
-                                                'service',
-                                                style: TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 18,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 6),
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                Icons.star,
-                                                color: Colors.yellow,
-                                              ),
-                                              Icon(
-                                                Icons.star,
-                                                color: Colors.yellow,
-                                              ),
-                                              Icon(
-                                                Icons.star,
-                                                color: Colors.yellow,
-                                              ),
-                                              Icon(
-                                                Icons.star,
-                                                color: Colors.yellow,
-                                              ),
-                                              Icon(
-                                                Icons.star,
-                                                color: Colors.yellow,
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
+                          ),
                         ],
                       ),
-                      SizedBox(height: 100),
+                      const SizedBox(height: 80),
                     ],
                   ),
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_33/components/auth_service.dart';
 import 'package:flutter_application_33/components/my_text_field.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
+import 'package:flutter_application_33/user/PhoneNumber.dart';
 import 'package:provider/provider.dart';
 import 'package:animated_background/animated_background.dart';
 import 'login.dart';
@@ -52,7 +53,7 @@ class _RegisterState extends State<Register> with TickerProviderStateMixin {
       );
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => user_dashboard()),
+        MaterialPageRoute(builder: (context) => PN()),
       );
     } catch (e) {
       // Handle errors during registration
