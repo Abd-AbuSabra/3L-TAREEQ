@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "98989646730",
+    "project_id": "phonenumberauth-df054",
+    "storage_bucket": "phonenumberauth-df054.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:98989646730:android:fcf47c3af495f12ff81e73",
+        "android_client_info": {
+          "package_name": "com.phonenumberauth.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvc1XNgCtUivXGHX6fnOtcV3_2IwRLOsQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

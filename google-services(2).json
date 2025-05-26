@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "837765634960",
+    "project_id": "altareeq-abdb1",
+    "storage_bucket": "altareeq-abdb1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:837765634960:android:5fe3c4c0a5fa1091643115",
+        "android_client_info": {
+          "package_name": "com.GP2.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9dXFxSOTHNY3lEvQ7rQEiGGnl3xYg9sc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
