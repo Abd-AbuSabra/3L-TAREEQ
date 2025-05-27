@@ -57,7 +57,7 @@ class _ApplyState extends State<Apply> {
           const SnackBar(content: Text("Please select at least one service.")));
       return;
     }
-
+    selectedServices.add("Service");
     try {
       // Get current user ID
       final user = FirebaseAuth.instance.currentUser;
@@ -68,7 +68,6 @@ class _ApplyState extends State<Apply> {
         return;
       }
 
-     
       Navigator.push(
         context,
         MaterialPageRoute(

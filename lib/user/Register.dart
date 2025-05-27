@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_33/components/auth_service.dart';
 import 'package:flutter_application_33/components/my_text_field.dart';
+import 'package:flutter_application_33/service_provider/apply.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_application_33/user/PhoneNumber.dart';
 import 'package:provider/provider.dart';
@@ -26,14 +27,10 @@ class _RegisterState extends State<Register> with TickerProviderStateMixin {
   bool isObscurePassword = true;
   bool isObscureConfirmPassword = true;
 
-  
   void SignUp() async {
-  
     if (!_formKey.currentState!.validate()) return;
 
-    
     if (passwordController.text != confirmpasswordController.text) {
-   
       setState(() {});
       return;
     }
@@ -41,22 +38,19 @@ class _RegisterState extends State<Register> with TickerProviderStateMixin {
     final authService = Provider.of<AuthService>(context, listen: false);
 
     try {
- 
       await authService.signUpWithEmailAndPassword(
           emailController.text.trim(), passwordController.text.trim(),
           username: usernameController.text.trim(),
           carBrandAndType: carBrandController.text.trim());
 
-      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Registration Successful!")),
       );
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => PN()),
+        MaterialPageRoute(builder: (context) => Apply()),
       );
     } catch (e) {
-  
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );

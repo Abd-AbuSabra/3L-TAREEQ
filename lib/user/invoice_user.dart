@@ -3,6 +3,8 @@ import 'package:flutter_application_33/pop_ups/rating.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_application_33/user/Payment.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Invoice_user extends StatefulWidget {
   const Invoice_user({super.key});
@@ -14,9 +16,216 @@ class Invoice_user extends StatefulWidget {
 class _Invoice_userState extends State<Invoice_user> {
   String? selectedPayment;
 
+  // Add these new variables
+  Map<String, dynamic>? providerData;
+  Map<String, double> servicesWithPrices = {};
+  String providerName = "";
+  String providerLocation = "";
+  bool isLoading = true;
+  double taxAmount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInvoiceData();
+  }
+
+  // Add this method to fetch invoice data
+  Future<void> _loadInvoiceData() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      // Get the accepted provider data for current user
+      final acceptedProviderQuery = await FirebaseFirestore.instance
+          .collection('acceptedProviders')
+          .where('userId', isEqualTo: user.uid)
+          .where('isAccepted', isEqualTo: true)
+          .limit(1)
+          .get();
+
+      if (acceptedProviderQuery.docs.isNotEmpty) {
+        final acceptedData = acceptedProviderQuery.docs.first.data();
+
+        setState(() {
+          providerName = acceptedData['username'] ?? 'Unknown Provider';
+          providerLocation =
+              acceptedData['providerLocation'] ?? 'Location not available';
+
+          // Extract services with prices
+          if (acceptedData['services'] != null) {
+            final Map<String, dynamic> rawServices = acceptedData['services'];
+            servicesWithPrices = rawServices
+                .map((key, value) => MapEntry(key, (value as num).toDouble()));
+          }
+
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading invoice data: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  // Add this method to calculate subtotal
+  double getSubtotal() {
+    final sub =
+        servicesWithPrices.values.fold(0.0, (sum, price) => sum + price);
+
+    return sub;
+  }
+
+  double getTax() {
+    final sub =
+        servicesWithPrices.values.fold(0.0, (sum, price) => sum + price);
+    taxAmount = sub * 0.16;
+    return taxAmount;
+  }
+
+  // Add this method to calculate total
+  double getTotal() {
+    return getSubtotal() + taxAmount;
+  }
+
+  List<Widget> buildServiceItems() {
+    List<Widget> serviceWidgets = [];
+
+    // Add each service with its price
+    servicesWithPrices.forEach((serviceName, price) {
+      serviceWidgets.add(
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 50),
+                  child: Text(
+                    serviceName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 50),
+                child: Text(
+                  '\$${price.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+
+    // Add tax row
+    serviceWidgets.add(
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(left: 50),
+                child: Text(
+                  'Tax',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 50),
+              child: Text(
+                '\$${(getTax()).toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // Add total row with different styling
+    serviceWidgets.add(
+      Container(
+        margin: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 0),
+        decoration: const BoxDecoration(
+          border: Border(
+            top: BorderSide(color: Colors.white, width: 2),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(left: 50),
+                child: Text(
+                  'Total',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 50),
+              child: Text(
+                '\$${getTotal().toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return serviceWidgets;
+  }
+
   void handleConfirm() {
     if (selectedPayment == "Cash") {
-      // Rating_popup();
+      showDialog(
+        context: context,
+        builder: (_) => const AlertDialog(
+          title: Text("Payment Confirmed"),
+          content: Text("Cash payment selected."),
+        ),
+      );
+    } else if (selectedPayment == "Credit/Debit card") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const Payment()),
+      );
     }
   }
 
@@ -24,13 +233,6 @@ class _Invoice_userState extends State<Invoice_user> {
     setState(() {
       selectedPayment = value;
     });
-
-    if (value == "Credit/Debit card") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const Payment()),
-      );
-    }
   }
 
   @override
@@ -73,10 +275,10 @@ class _Invoice_userState extends State<Invoice_user> {
                         const SizedBox(width: 10),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
-                          children: const [
-                            SizedBox(height: 40),
+                          children: [
+                            const SizedBox(height: 40),
                             Text(
-                              '"Service providers name"',
+                              providerName,
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -133,24 +335,7 @@ class _Invoice_userState extends State<Invoice_user> {
                           ],
                         ),
                       ),
-                      for (var label in ["Service", "Tax", "Total"])
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              const SizedBox(width: 50),
-                              Text(
-                                label,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      ...buildServiceItems(),
                       const SizedBox(height: 40),
                       const Padding(
                         padding: EdgeInsets.all(20.0),
@@ -189,7 +374,9 @@ class _Invoice_userState extends State<Invoice_user> {
                               value: payment,
                               groupValue: selectedPayment,
                               onChanged: (value) {
-                                if (value != null) handleRadioSelection(value);
+                                if (value != null) {
+                                  handleRadioSelection(value);
+                                }
                               },
                               title: Text(
                                 payment,
@@ -206,7 +393,7 @@ class _Invoice_userState extends State<Invoice_user> {
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed:
-                            selectedPayment == "Cash" ? handleConfirm : null,
+                            selectedPayment != null ? handleConfirm : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color.fromARGB(255, 7, 40, 89),
                           padding: const EdgeInsets.symmetric(
@@ -233,7 +420,6 @@ class _Invoice_userState extends State<Invoice_user> {
           ),
         ),
       ),
-     
     );
   }
 }
