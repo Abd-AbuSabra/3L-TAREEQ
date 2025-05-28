@@ -77,9 +77,9 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
     try {
       final userId = data['userId']; // user who requested
       final providerId = FirebaseAuth.instance.currentUser?.uid ?? '';
-      final services = data['services'] ?? [];
+      final userSelectedServices =
+          data['services'] ?? []; // Services user actually selected
       final times = data['times'] ?? [];
-
       // Get provider's service pricing
       final providerDoc = await FirebaseFirestore.instance
           .collection('providers')
@@ -90,6 +90,16 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
       final providerServices =
           providerData['services'] as Map<String, dynamic>? ?? {};
 
+      // Create filtered services map with only user-selected services and their prices
+      Map<String, dynamic> filteredServices = {};
+      for (String service in userSelectedServices) {
+        if (providerServices.containsKey(service)) {
+          filteredServices[service] = providerServices[service];
+        }
+      }
+      if (providerServices.containsKey('Service')) {
+        filteredServices['Service'] = providerServices['Service'];
+      }
       // 1. Update the serviceRequest doc status to accepted, and assign providerId
       await FirebaseFirestore.instance
           .collection('serviceRequests')
@@ -127,13 +137,15 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         'userId': userId,
         'providerId': providerId,
         'username': providerName,
-        'services': providerServices, // include pricing
+        'services':
+            filteredServices, // Only user-selected services with their prices
         'times': times,
         'rating': providerRating,
         'mobile': providerData['mobile'] ?? '',
         'isAccepted': true,
         'timestamp': FieldValue.serverTimestamp(),
       });
+
       showDialog(
         context: context,
         builder: (context) => invoice_SP(),

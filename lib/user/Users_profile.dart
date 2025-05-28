@@ -8,6 +8,8 @@ import 'package:flutter_application_33/user/login.dart';
 import 'package:flutter_application_33/user/service_history.dart';
 import 'package:circular_menu/circular_menu.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class users_profile extends StatefulWidget {
   const users_profile({super.key});
@@ -18,6 +20,51 @@ class users_profile extends StatefulWidget {
 
 class _users_profileState extends State<users_profile> {
   final Color customGreen = const Color.fromARGB(255, 192, 228, 194);
+
+  // User data variables
+  String userName = '"Name"';
+  String formattedDate = "date";
+  Map<String, dynamic>? userData;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  String getInitials(String name) {
+    List<String> names = name.trim().split(" ");
+    String initials = names.isNotEmpty ? names[0][0] : '';
+    if (names.length > 1) initials += names[1][0];
+    return initials.toUpperCase();
+  }
+
+  final Color avatarColor = Colors.teal; // Or generate randomly
+  Future<void> fetchUserData() async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+
+        if (userDoc.exists) {
+          userData = userDoc.data() as Map<String, dynamic>;
+
+          setState(() {
+            userName = userData!['username'] ?? '"Name"';
+            Timestamp createdAt = userData!['createdAt'];
+            DateTime createdAtDate = createdAt.toDate();
+            formattedDate =
+                "Joined: ${DateFormat('MMMM yyyy').format(createdAtDate)}"; // Example: May 2025
+          });
+        }
+      }
+    } catch (e) {
+      print("Error fetching user data: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,29 +106,45 @@ class _users_profileState extends State<users_profile> {
                         padding: const EdgeInsets.all(12.0),
                         child: Row(
                           children: [
-                            const CircleAvatar(
+                            CircleAvatar(
                               radius: 45,
-                              backgroundImage: AssetImage('assets/profile.jpg'),
+                              backgroundColor: avatarColor,
+                              child: Text(
+                                getInitials(userName),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 23,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                             const SizedBox(width: 10),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
-                              children: const [
-                                SizedBox(height: 30),
-                                Row(
+                              children: [
+                                const SizedBox(height: 30),
+                                Column(
                                   children: [
-                                    SizedBox(width: 60),
+                                    const SizedBox(width: 60),
                                     Text(
-                                      '"Name"',
-                                      style: TextStyle(
+                                      userName,
+                                      style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
+                                        color: Color.fromARGB(255, 7, 65, 115),
+                                      ),
+                                    ),
+                                    Text(
+                                      formattedDate,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color.fromARGB(255, 7, 65, 115),
                                       ),
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 6),
+                                const SizedBox(height: 6),
                               ],
                             ),
                           ],
@@ -189,12 +252,22 @@ class _users_profileState extends State<users_profile> {
                                 trailing: const Icon(Icons.arrow_forward_ios,
                                     color: Colors.white),
                                 onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const user_details()),
-                                  );
+                                  if (userData != null) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => user_details(
+                                              userData: userData!)),
+                                    );
+                                  } else {
+                                    // Navigate anyway, the details page will handle loading
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              const user_details()),
+                                    );
+                                  }
                                 },
                               ),
                               const SizedBox(height: 15),
@@ -216,7 +289,8 @@ class _users_profileState extends State<users_profile> {
                               ),
                               const SizedBox(height: 15),
                               ListTile(
-                                title: const Text('Register as a service provider',
+                                title: const Text(
+                                    'Register as a service provider',
                                     style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 18,
@@ -247,7 +321,8 @@ class _users_profileState extends State<users_profile> {
                                     (Route<dynamic> route) => false,
                                   );
                                 },
-                                icon: const Icon(Icons.logout, color: Colors.white),
+                                icon: const Icon(Icons.logout,
+                                    color: Colors.white),
                                 label: const Text(
                                   'Log Out',
                                   style: TextStyle(
@@ -278,7 +353,8 @@ class _users_profileState extends State<users_profile> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const user_dashboard()),
+                    MaterialPageRoute(
+                        builder: (context) => const user_dashboard()),
                   );
                 },
               ),
@@ -287,10 +363,11 @@ class _users_profileState extends State<users_profile> {
                 color: customGreen,
                 iconColor: Colors.white,
                 onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('You are already on the profile page')),
-            );
-          },
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text('You are already on the profile page')),
+                  );
+                },
               ),
               CircularMenuItem(
                 icon: Icons.chat,
@@ -299,8 +376,7 @@ class _users_profileState extends State<users_profile> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) => const GeminiPage()),
+                    MaterialPageRoute(builder: (context) => const GeminiPage()),
                   );
                 },
               ),
