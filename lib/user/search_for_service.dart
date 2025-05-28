@@ -98,7 +98,8 @@ class _SearchForServiceState extends State<SearchForService>
         // Handle no providers found case
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('No providers found for selected services')),
+              content: Text(
+                  'No providers found for selected services please select at least one service')),
         );
         return;
       }

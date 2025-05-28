@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_33/service_provider/apply.dart';
 import 'package:flutter_application_33/service_provider/dashboard_SP.dart';
+import 'package:flutter_application_33/service_provider/SP_profile.dart';
 
 import 'package:flutter_application_33/components/auth_service.dart';
 import 'package:flutter_application_33/components/my_text_field.dart';
@@ -56,7 +57,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
         );
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const users_profile()),
+          MaterialPageRoute(builder: (context) => const Apply()),
         );
         return;
       }
@@ -72,7 +73,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
         );
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const Dashboard_SP()),
+          MaterialPageRoute(builder: (context) => const SP_profile()),
         );
         return;
       }

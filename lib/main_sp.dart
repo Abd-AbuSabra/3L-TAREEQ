@@ -73,8 +73,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '3l tareeq',
       debugShowCheckedModeBanner: false,
-      home:
-          FirebaseAuth.instance.currentUser != null ? Dashboard_SP() : Login(),
+      home: FirebaseAuth.instance.currentUser != null ? SP_profile() : Login(),
     );
   }
 }

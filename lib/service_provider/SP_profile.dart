@@ -4,6 +4,12 @@ import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_application_33/service_provider/Pricing.dart';
 import 'package:flutter_application_33/service_provider/SP_details.dart';
 import 'package:flutter_application_33/service_provider/service_history_SP.dart';
+import 'package:flutter_application_33/user/login.dart';
+import 'package:flutter_application_33/user/service_history.dart';
+import 'package:circular_menu/circular_menu.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 import 'package:circular_menu/circular_menu.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,6 +26,48 @@ class SP_profile extends StatefulWidget {
 
 class _SP_profileState extends State<SP_profile> {
   String? selectedPayment;
+  String userName = '"Name"';
+  String formattedDate = "date";
+  Map<String, dynamic>? userData;
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  String getInitials(String name) {
+    List<String> names = name.trim().split(" ");
+    String initials = names.isNotEmpty ? names[0][0] : '';
+    if (names.length > 1) initials += names[1][0];
+    return initials.toUpperCase();
+  }
+
+  final Color avatarColor = Colors.teal; // Or generate randomly
+  Future<void> fetchUserData() async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('providers')
+            .doc(currentUser.uid)
+            .get();
+
+        if (userDoc.exists) {
+          userData = userDoc.data() as Map<String, dynamic>;
+
+          setState(() {
+            userName = userData!['username'] ?? '"Name"';
+            Timestamp createdAt = userData!['createdAt'];
+            DateTime createdAtDate = createdAt.toDate();
+            formattedDate =
+                "Joined: ${DateFormat('MMMM yyyy').format(createdAtDate)}"; // Example: May 2025
+          });
+        }
+      }
+    } catch (e) {
+      print("Error fetching user data: $e");
+    }
+  }
 
   final Color customGreen = const Color.fromARGB(255, 192, 228, 194);
 
@@ -72,15 +120,22 @@ class _SP_profileState extends State<SP_profile> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 const SizedBox(height: 30),
-                                Row(
-                                  children: const [
-                                    SizedBox(width: 60),
+                                Column(
+                                  children: [
                                     Text(
-                                      '"Name"',
-                                      style: TextStyle(
+                                      userName,
+                                      style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
+                                        color: Color.fromARGB(255, 7, 65, 115),
+                                      ),
+                                    ),
+                                    Text(
+                                      formattedDate,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color.fromARGB(255, 7, 65, 115),
                                       ),
                                     ),
                                   ],
@@ -182,11 +237,13 @@ class _SP_profileState extends State<SP_profile> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white),
+                                trailing: const Icon(Icons.arrow_forward_ios,
+                                    color: Colors.white),
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => SP_details()),
+                                    MaterialPageRoute(
+                                        builder: (context) => SP_details()),
                                   );
                                 },
                               ),
@@ -200,11 +257,13 @@ class _SP_profileState extends State<SP_profile> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white),
+                                trailing: const Icon(Icons.arrow_forward_ios,
+                                    color: Colors.white),
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => Services_SP()),
+                                    MaterialPageRoute(
+                                        builder: (context) => Services_SP()),
                                   );
                                 },
                               ),
@@ -218,11 +277,15 @@ class _SP_profileState extends State<SP_profile> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white),
+                                trailing: const Icon(Icons.arrow_forward_ios,
+                                    color: Colors.white),
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => Pricing(selectedServices: [],)),
+                                    MaterialPageRoute(
+                                        builder: (context) => Pricing(
+                                              selectedServices: [],
+                                            )),
                                   );
                                 },
                               ),
@@ -237,11 +300,13 @@ class _SP_profileState extends State<SP_profile> {
                                   await FirebaseAuth.instance.signOut();
                                   Navigator.pushAndRemoveUntil(
                                     context,
-                                    MaterialPageRoute(builder: (context) => const Login()),
+                                    MaterialPageRoute(
+                                        builder: (context) => const Login()),
                                     (route) => false,
                                   );
                                 },
-                                icon: const Icon(Icons.logout, color: Colors.white),
+                                icon: const Icon(Icons.logout,
+                                    color: Colors.white),
                                 label: const Text(
                                   'Log Out',
                                   style: TextStyle(
@@ -261,21 +326,20 @@ class _SP_profileState extends State<SP_profile> {
               ),
             ),
           ),
-
-         
           CircularMenu(
             alignment: Alignment.bottomRight,
             toggleButtonColor: customGreen,
             toggleButtonIconColor: Colors.white,
             items: [
-               CircularMenuItem(
+              CircularMenuItem(
                 icon: Icons.home,
                 color: customGreen,
                 iconColor: Colors.white,
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Dashboard_SP()),
+                    MaterialPageRoute(
+                        builder: (context) => const Dashboard_SP()),
                   );
                 },
               ),
