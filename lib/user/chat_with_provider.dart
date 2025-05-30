@@ -29,8 +29,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final ChatService _chatService = ChatService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  bool isConfirmed = false; 
-
+  bool isConfirmed = false;
 
   void sendMessage() async {
     if (_controller.text.trim().isNotEmpty) {
@@ -86,7 +85,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-
   Widget _buildMessageList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -120,7 +118,8 @@ class _ChatScreenState extends State<ChatScreen> {
             final isMe = data['senderId'] == _auth.currentUser!.uid;
             final status = data['status'] ?? 'sent';
 
-            return buildBubble(data['message'], isMe, data['senderEmail'], status);
+            return buildBubble(
+                data['message'], isMe, data['senderEmail'], status);
           },
         );
       },
@@ -134,26 +133,17 @@ class _ChatScreenState extends State<ChatScreen> {
     return ids.join("_");
   }
 
-  /// Confirm logic
-  void confirmService() {
-    setState(() {
-      isConfirmed = true;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Service confirmed!')),
-    );
-  }
-
-  /// Cancel logic
-  void cancelService() {
-    Navigator.pop(context);
-  }
-
   @override
   Widget build(BuildContext context) {
     var customGreen;
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: BackButton(
+          color: const Color.fromARGB(255, 144, 223, 170),
+        ),
+      ),
       backgroundColor: Colors.white, // Figma match
       body: SafeArea(
         child: Column(
@@ -178,103 +168,64 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(
-                    height: 45,
-                    child: ElevatedButton(
-                      onPressed: isConfirmed ? null : confirmService,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF004E9A),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        "Confirm Service",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 10),
-                  SizedBox(
-                    height: 45,
-                    child: ElevatedButton(
-                      onPressed: cancelService,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4A4A4A),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        "Cancel",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
                   CircularMenu(
-            alignment: Alignment.bottomRight,
-            toggleButtonColor: customGreen,
-            toggleButtonIconColor: Colors.white,
-            items: [
-              CircularMenuItem(
-                icon: Icons.home,
-                color: customGreen,
-                iconColor: Colors.white,
-                 onTap: () {
-                 Navigator.push(
-                 context,
-                MaterialPageRoute(builder: (context) => const user_dashboard()),
-                );
-                }
-                
-              ),
-              
-              CircularMenuItem(
-                icon: Icons.person,
-                color: customGreen,
-                iconColor: Colors.white,
-                onTap: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => const users_profile()),
-  );
-},
-              ),
-              CircularMenuItem(
-                icon: Icons.chat,
-                color: customGreen,
-                iconColor: Colors.white,
-                onTap: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => const GeminiPage())
-  );
-},
-              ),
-              CircularMenuItem(
-                icon: Icons.logout,
-                color: Colors.red,
-                iconColor: Colors.white,
-                onTap: () async {
-                 await Provider.of<AuthService>(context, listen: false).signOut();
+                    alignment: Alignment.bottomRight,
+                    toggleButtonColor: customGreen,
+                    toggleButtonIconColor: Colors.white,
+                    items: [
+                      CircularMenuItem(
+                          icon: Icons.home,
+                          color: customGreen,
+                          iconColor: Colors.white,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const user_dashboard()),
+                            );
+                          }),
+                      CircularMenuItem(
+                        icon: Icons.person,
+                        color: customGreen,
+                        iconColor: Colors.white,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const users_profile()),
+                          );
+                        },
+                      ),
+                      CircularMenuItem(
+                        icon: Icons.chat,
+                        color: customGreen,
+                        iconColor: Colors.white,
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const GeminiPage()));
+                        },
+                      ),
+                      CircularMenuItem(
+                        icon: Icons.logout,
+                        color: Colors.red,
+                        iconColor: Colors.white,
+                        onTap: () async {
+                          await Provider.of<AuthService>(context, listen: false)
+                              .signOut();
 
-               Navigator.pushAndRemoveUntil(
-               context,
-              MaterialPageRoute(builder: (context) => const Login()),
-              (Route<dynamic> route) => false,
-               );
-               },
-              ),
-            ],
-          ),
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const Login()),
+                            (Route<dynamic> route) => false,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -308,7 +259,6 @@ class _ChatScreenState extends State<ChatScreen> {
                       color: Colors.blue,
                     ),
                   ],
-                  
                 ),
               ),
             ),

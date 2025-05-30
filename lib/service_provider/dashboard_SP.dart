@@ -77,6 +77,8 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
     try {
       final userId = data['userId']; // user who requested
       final providerId = FirebaseAuth.instance.currentUser?.uid ?? '';
+      final providerEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+      final userEmail = data['userEmail'] ?? '';
       final userSelectedServices =
           data['services'] ?? []; // Services user actually selected
       final times = data['times'] ?? [];
@@ -108,6 +110,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         'status': 'accepted',
         'acceptedAt': FieldValue.serverTimestamp(),
         'providerId': providerId,
+        'providerEmail': providerEmail
       });
 
       // 2. Mark other pending requests for this user as expired
@@ -135,20 +138,23 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
           .doc(userId)
           .set({
         'userId': userId,
+        'userEmail': userEmail,
+        'userMobile': '',
         'providerId': providerId,
         'username': providerName,
+        'providerEmail': providerEmail,
         'services':
             filteredServices, // Only user-selected services with their prices
         'times': times,
         'rating': providerRating,
-        'mobile': providerData['mobile'] ?? '',
+        'providerMobile': providerData['mobile'] ?? '',
         'isAccepted': true,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
       showDialog(
         context: context,
-        builder: (context) => invoice_SP(),
+        builder: (context) => live_track_SP(),
       );
 
       ScaffoldMessenger.of(context).showSnackBar(

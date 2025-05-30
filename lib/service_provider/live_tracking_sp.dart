@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:circular_menu/circular_menu.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application_33/google_maps/map.dart';
 import 'package:flutter_application_33/service_provider/SP_profile.dart';
 import 'package:flutter_application_33/service_provider/dashboard_SP.dart';
 import 'package:flutter_application_33/service_provider/invoice_SP.dart';
+import 'package:flutter_application_33/service_provider/chat_with_user.dart';
 
 import 'package:flutter_application_33/Gemini/gemini_page.dart';
 import 'package:flutter_application_33/user/login.dart';
@@ -19,6 +21,108 @@ class live_track_SP extends StatefulWidget {
 }
 
 class _live_track_SPState extends State<live_track_SP> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Map<String, dynamic>? userData;
+  String? documentId;
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      setState(() {
+        isLoading = true;
+        errorMessage = null;
+      });
+
+      final User? currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        setState(() {
+          errorMessage = "Service provider not authenticated";
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Query the acceptedProviders collection where the current user is the provider
+      final QuerySnapshot querySnapshot = await _firestore
+          .collection('acceptedProviders')
+          .where('providerId', isEqualTo: currentUser.uid)
+          .where('isAccepted', isEqualTo: true)
+          //  .orderBy('times', descending: true) // Get the most recent
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        setState(() {
+          userData = doc.data() as Map<String, dynamic>;
+          documentId = doc.id; // Store document ID for updates
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          errorMessage = "No active service found";
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = "Error fetching data: $e";
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _endService() async {
+    try {
+      if (documentId != null) {
+        // Update the service status to mark as completed
+        await _firestore
+            .collection('acceptedProviders')
+            .doc(documentId)
+            .update({
+          'isAccepted': false, // or add a 'completed' field
+          'completedAt': FieldValue.serverTimestamp(),
+        });
+
+        // Navigate to invoice
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const invoice_SP(),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error ending service: $e')),
+      );
+    }
+  }
+
+  String _getServicesText() {
+    if (userData?['services'] == null) return 'Service details';
+
+    Map<String, dynamic> services = userData!['services'];
+    List<String> serviceList = [];
+
+    services.forEach((key, value) {
+      if (value is num && value > 0 && key != 'Service') {
+        serviceList.add(key);
+      }
+    });
+
+    return serviceList.isEmpty ? 'Service details' : serviceList.join(', ');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,97 +168,13 @@ class _live_track_SPState extends State<live_track_SP> {
                                           right: 0,
                                           child: IconButton(
                                             onPressed: () {
-                                              // Close or other logic
+                                              // Refresh data
+                                              _fetchUserData();
                                             },
-                                            icon: const Icon(Icons.close),
+                                            icon: const Icon(Icons.refresh),
                                           ),
                                         ),
-                                        Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            const SizedBox(height: 10),
-                                            const Text(
-                                              'User Name',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 6),
-                                            const Text(
-                                              'Service details',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 20),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Card(
-                                                  color: Colors.white,
-                                                  child: IconButton(
-                                                    onPressed: () {
-                                                      // Chat logic here
-                                                    },
-                                                    icon: const Icon(
-                                                      Icons.message_rounded,
-                                                      size: 30,
-                                                      color: Color.fromRGBO(22, 121, 171, 1.0),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 40),
-                                                Card(
-                                                  color: Colors.white,
-                                                  child: IconButton(
-                                                    onPressed: () {
-                                                      // Call logic here
-                                                    },
-                                                    icon: const Icon(
-                                                      Icons.call,
-                                                      size: 30,
-                                                      color: Color.fromRGBO(22, 121, 171, 1.0),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 10),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                ElevatedButton(
-                                                  onPressed: () {
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) => const invoice_SP(),
-                                                      ),
-                                                    );
-                                                  },
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor: Colors.red,
-                                                    padding: const EdgeInsets.symmetric(
-                                                        horizontal: 80, vertical: 15),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(10),
-                                                    ),
-                                                  ),
-                                                  child: const Text(
-                                                    'End the service',
-                                                    style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.bold,
-                                                        fontSize: 18),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
+                                        _buildContent(),
                                       ],
                                     ),
                                   ),
@@ -167,7 +187,8 @@ class _live_track_SPState extends State<live_track_SP> {
                                     child: Container(
                                       height: 40,
                                       width: 200,
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 6),
                                       decoration: BoxDecoration(
                                         color: Colors.white,
                                         borderRadius: BorderRadius.circular(10),
@@ -181,10 +202,11 @@ class _live_track_SPState extends State<live_track_SP> {
                                       ),
                                       child: const Center(
                                         child: Text(
-                                          'Help is on the way !',
+                                          'Service in Progress',
                                           style: TextStyle(
                                             fontSize: 18,
-                                            color: Color.fromRGBO(22, 121, 171, 1.0),
+                                            color: Color.fromRGBO(
+                                                22, 121, 171, 1.0),
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -204,8 +226,6 @@ class _live_track_SPState extends State<live_track_SP> {
               ),
             ),
           ),
-
-          
           CircularMenu(
             alignment: Alignment.bottomRight,
             toggleButtonColor: customGreen,
@@ -218,7 +238,8 @@ class _live_track_SPState extends State<live_track_SP> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Dashboard_SP()),
+                    MaterialPageRoute(
+                        builder: (context) => const Dashboard_SP()),
                   );
                 },
               ),
@@ -261,6 +282,166 @@ class _live_track_SPState extends State<live_track_SP> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Color.fromRGBO(22, 121, 171, 1.0),
+        ),
+      );
+    }
+
+    if (errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 50,
+              color: Colors.red[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              errorMessage!,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.red,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchUserData,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (userData == null) {
+      return const Center(
+        child: Text(
+          'No user data available',
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey,
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(height: 10),
+        // User Avatar (default since no profile image in your structure)
+        const CircleAvatar(
+          radius: 40,
+          backgroundColor: Color.fromARGB(255, 219, 218, 218),
+          child: Icon(Icons.person, size: 40, color: Colors.grey),
+        ),
+
+        Text(
+          userData!['username'] ?? 'Unknown User',
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
+
+        Text(
+          _getServicesText(),
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.grey,
+          ),
+        ),
+        const SizedBox(height: 5),
+        if (userData!['userEmail'] != null)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Card(
+                color: Colors.white,
+                child: IconButton(
+                  onPressed: () {
+                    if (userData!['userId'] != null &&
+                        userData!['userEmail'] != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatWithCustomer(
+                            receiverUserID: userData!['userId'],
+                            receiverEmail: userData!['userEmail'],
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(
+                    Icons.message_rounded,
+                    size: 30,
+                    color: Color.fromRGBO(22, 121, 171, 1.0),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 40),
+              Card(
+                color: Colors.white,
+                child: IconButton(
+                  onPressed: () {
+                    // Handle call functionality
+                    String phoneNumber = userData!['userMobile'] ?? '';
+                    if (phoneNumber.isNotEmpty) {
+                      print('Call: $phoneNumber');
+                      // You can use url_launcher here to make actual calls
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('No phone number available')),
+                      );
+                    }
+                  },
+                  icon: const Icon(
+                    Icons.call,
+                    size: 30,
+                    color: Color.fromRGBO(22, 121, 171, 1.0),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: _endService,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'End the service',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

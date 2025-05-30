@@ -113,6 +113,8 @@ class _SearchForServiceState extends State<SearchForService>
 
         batch.set(requestRef, {
           'userId': user.uid,
+          'userEmail': user.email,
+          'userMobile': '',
           'targetProviderId':
               provider['uid'], // specific provider this request is for
           'services': selectedServiceTexts,
@@ -120,6 +122,7 @@ class _SearchForServiceState extends State<SearchForService>
           'timestamp': FieldValue.serverTimestamp(),
           'status': 'pending',
           'providerId': '', // will be filled when accepted
+          'providerEmail': '',
         });
       }
 

@@ -58,7 +58,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
         );
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const Apply()),
+          MaterialPageRoute(builder: (context) => const SearchForService()),
         );
         return;
       }
@@ -74,7 +74,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
         );
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => SP_profile()),
+          MaterialPageRoute(builder: (context) => Dashboard_SP()),
         );
         return;
       }

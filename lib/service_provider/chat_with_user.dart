@@ -43,7 +43,8 @@ class _ChatWithCustomerState extends State<ChatWithCustomer> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment:
+            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           Text(
             isMe ? 'You' : senderName,
@@ -100,157 +101,65 @@ class _ChatWithCustomerState extends State<ChatWithCustomer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: BackButton(
+          color: const Color.fromARGB(255, 144, 223, 170),
+        ),
+      ),
       backgroundColor: Colors.white,
-      body: CircularMenu(
-        alignment: Alignment.bottomRight,
-        toggleButtonColor: customGreen,
-        toggleButtonIconColor: Colors.white,
-        items: [
-          CircularMenuItem(
-            icon: Icons.home,
-            color: customGreen,
-            iconColor: Colors.white,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const Dashboard_SP()),
-              );
-            },
-          ),
-          CircularMenuItem(
-            icon: Icons.person,
-            color: customGreen,
-            iconColor: Colors.white,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SP_profile()),
-              );
-            },
-          ),
-          CircularMenuItem(
-            icon: Icons.chat,
-            color: customGreen,
-            iconColor: Colors.white,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const GeminiPage()),
-              );
-            },
-          ),
-          CircularMenuItem(
-            icon: Icons.logout,
-            color: Colors.red,
-            iconColor: Colors.white,
-            onTap: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const Login()),
-                (Route<dynamic> route) => false,
-              );
-            },
-          ),
-        ],
-        backgroundWidget: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Image.asset(
-                  'lib/images/Logo2.png',
-                  height: 40,
-                ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Image.asset(
+                'lib/images/Logo2.png',
+                height: 40,
               ),
-              Expanded(child: _buildMessageList()),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+            ),
+            Expanded(child: _buildMessageList()),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.grey[100],
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
                   children: [
-                    SizedBox(
-                      height: 45,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // TODO: Confirm logic
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF004E9A),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          "Confirm Service",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        decoration: const InputDecoration(
+                          hintText: 'Type your message...',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 45,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // TODO: Cancel logic
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4A4A4A),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                    IconButton(
+                      onPressed: sendMessage,
+                      icon: const Icon(Icons.send),
+                      color: Colors.blue,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    color: Colors.grey[100],
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _controller,
-                          decoration: const InputDecoration(
-                            hintText: 'Type your message...',
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: sendMessage,
-                        icon: const Icon(Icons.send),
-                        color: Colors.blue,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-            ],
-          ),
+            ),
+            const SizedBox(height: 10),
+          ],
         ),
       ),
     );
