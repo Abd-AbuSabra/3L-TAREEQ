@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_application_33/service_provider/Pricing.dart'; // Make sure you adjust this import path
 
@@ -13,6 +18,10 @@ class Apply extends StatefulWidget {
 
 class _ApplyState extends State<Apply> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final ImagePicker _picker = ImagePicker();
+
+  File? _selectedImage;
+  Uint8List? _webImage;
 
   final Map<String, TextEditingController> serviceControllers = {
     "Flat Tire Change": TextEditingController(text: "Flat Tire Change"),
@@ -46,6 +55,36 @@ class _ApplyState extends State<Apply> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        if (kIsWeb) {
+          // For web platform
+          final bytes = await image.readAsBytes();
+          setState(() {
+            _webImage = bytes;
+            _selectedImage = null;
+          });
+        } else {
+          // For mobile platforms
+          setState(() {
+            _selectedImage = File(image.path);
+            _webImage = null;
+          });
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error picking image: $e")),
+      );
+    }
+  }
+
   Future<void> _submitApplication() async {
     final selectedServices = serviceSelections.entries
         .where((entry) => entry.value)
@@ -57,7 +96,17 @@ class _ApplyState extends State<Apply> {
           const SnackBar(content: Text("Please select at least one service.")));
       return;
     }
+
+    // Check if image is attached
+    if (_selectedImage == null && _webImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please attach a photo to continue.")),
+      );
+      return;
+    }
+
     selectedServices.add("Service");
+
     try {
       // Get current user ID
       final user = FirebaseAuth.instance.currentUser;
@@ -68,10 +117,15 @@ class _ApplyState extends State<Apply> {
         return;
       }
 
+      // Navigate to Pricing with services and image data
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => Pricing(selectedServices: selectedServices),
+          builder: (context) => Pricing(
+            selectedServices: selectedServices,
+            selectedImageFile: _selectedImage,
+            selectedImageBytes: _webImage,
+          ),
         ),
       );
     } catch (e) {
@@ -160,10 +214,24 @@ class _ApplyState extends State<Apply> {
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            "Attach portfolio:",
+                            "Attach Photo:",
                             style: TextStyle(
                               fontSize: 25,
                               color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.only(left: 40, bottom: 10),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            "Required*",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color.fromARGB(255, 255, 193, 7),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -176,16 +244,65 @@ class _ApplyState extends State<Apply> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
+                            border: (_selectedImage == null &&
+                                    _webImage == null)
+                                ? Border.all(
+                                    color:
+                                        const Color.fromARGB(255, 255, 193, 7),
+                                    width: 2,
+                                  )
+                                : null,
                           ),
                           child: Center(
-                            child: IconButton(
-                              onPressed: () {},
-                              icon: const Icon(
-                                Icons.upload,
-                                color: Color.fromARGB(255, 192, 228, 194),
-                                size: 120,
-                              ),
-                            ),
+                            child: (_selectedImage != null || _webImage != null)
+                                ? GestureDetector(
+                                    onTap: _pickImage,
+                                    child: Stack(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          child: kIsWeb
+                                              ? Image.memory(
+                                                  _webImage!,
+                                                  height: 130,
+                                                  width: double.infinity,
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : Image.file(
+                                                  _selectedImage!,
+                                                  height: 130,
+                                                  width: double.infinity,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                        ),
+                                        Positioned(
+                                          top: 5,
+                                          right: 5,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.black54,
+                                              borderRadius:
+                                                  BorderRadius.circular(15),
+                                            ),
+                                            child: Icon(
+                                              Icons.edit,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : IconButton(
+                                    onPressed: _pickImage,
+                                    icon: const Icon(
+                                      Icons.upload,
+                                      color: Color.fromARGB(255, 192, 228, 194),
+                                      size: 120,
+                                    ),
+                                  ),
                           ),
                         ),
                       ),

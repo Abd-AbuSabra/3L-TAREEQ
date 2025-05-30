@@ -2,12 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
+import 'dart:io';
+import 'dart:typed_data';
 
 class Pricing extends StatefulWidget {
   final List<String> selectedServices;
+  final File? selectedImageFile;
+  final Uint8List? selectedImageBytes;
 
-  const Pricing({Key? key, required this.selectedServices}) : super(key: key);
+  const Pricing({
+    Key? key,
+    required this.selectedServices,
+    this.selectedImageFile,
+    this.selectedImageBytes,
+  }) : super(key: key);
 
   @override
   State<Pricing> createState() => _PricingState();
@@ -15,6 +25,7 @@ class Pricing extends StatefulWidget {
 
 class _PricingState extends State<Pricing> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
   final Map<String, TextEditingController> _priceControllers = {};
   bool isLoading = false;
 
@@ -32,14 +43,54 @@ class _PricingState extends State<Pricing> {
 
   @override
   void dispose() {
-
     for (var controller in _priceControllers.values) {
       controller.dispose();
     }
     super.dispose();
   }
 
+  Future<String?> _uploadImage() async {
+    if (widget.selectedImageFile == null && widget.selectedImageBytes == null) {
+      print("${widget.selectedImageFile} bytes=${widget.selectedImageBytes} ");
+
+      return null;
+    }
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return null;
+
+      // Create a reference to the image in Firebase Storage
+      final storageRef = _storage
+          .ref()
+          .child('provider_images')
+          .child('${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+      UploadTask uploadTask;
+
+      if (widget.selectedImageBytes != null) {
+        // For web platform
+        uploadTask = storageRef.putData(widget.selectedImageBytes!);
+      } else {
+        // For mobile platform
+        uploadTask = storageRef.putFile(widget.selectedImageFile!);
+      }
+
+      final snapshot = await uploadTask;
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      return downloadUrl;
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
+  }
+
   Future<void> _submitPricing() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception("User not signed in.");
@@ -55,7 +106,6 @@ class _PricingState extends State<Pricing> {
         }
 
         try {
-        
           final cleanedPrice = priceText.replaceAll(' \JD', '').trim();
 
           if (cleanedPrice.isEmpty) {
@@ -74,6 +124,9 @@ class _PricingState extends State<Pricing> {
             SnackBar(
                 content: Text("Please enter valid prices for all services")),
           );
+          setState(() {
+            isLoading = false;
+          });
           return;
         }
       }
@@ -82,7 +135,27 @@ class _PricingState extends State<Pricing> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Please enter prices for all services")),
         );
+        setState(() {
+          isLoading = false;
+        });
         return;
+      }
+
+      // Upload image first
+      String? imageUrl;
+      if (widget.selectedImageFile != null ||
+          widget.selectedImageBytes != null) {
+        imageUrl = await _uploadImage();
+        if (imageUrl == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text("Failed to upload image. Please try again.")),
+          );
+          setState(() {
+            isLoading = false;
+          });
+          return;
+        }
       }
 
       // Get the user document for basic information
@@ -98,6 +171,8 @@ class _PricingState extends State<Pricing> {
         'isServiceProvider': true,
         'joinedAt': FieldValue.serverTimestamp(),
         'rating': 1,
+        if (imageUrl != null)
+          'profileImageUrl': imageUrl, // Add image URL if available
       };
 
       // Reference to the provider document in 'providers' collection
@@ -107,21 +182,23 @@ class _PricingState extends State<Pricing> {
 
       await providerRef.set(providerData);
 
-      
       final reviewsRef = providerRef.collection('reviews');
-     
+
       await _firestore.collection('users').doc(user.uid).delete();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("You are now a service provider!")),
       );
 
-     
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error saving pricing: $e")),
       );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -210,8 +287,7 @@ class _PricingState extends State<Pricing> {
             ],
           ),
           trailing: IconButton(
-            icon: Icon(Icons.edit,
-                color: Color.fromARGB(255, 7, 40, 89), size: 30),
+            icon: Icon(Icons.edit, color: Colors.white, size: 30),
             onPressed: () => _editPriceDialog(title),
           ),
         ),
@@ -240,7 +316,7 @@ class _PricingState extends State<Pricing> {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 192, 228, 194),
+                        color: Color.fromRGBO(22, 121, 171, 1.0),
                       ),
                     )
                   ],
@@ -287,7 +363,7 @@ class _PricingState extends State<Pricing> {
                       SizedBox(height: 200),
                       Center(
                         child: ElevatedButton(
-                          onPressed: _submitPricing,
+                          onPressed: isLoading ? null : _submitPricing,
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
                                 const Color.fromARGB(255, 7, 40, 89),
@@ -297,13 +373,22 @@ class _PricingState extends State<Pricing> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          child: Text(
-                            'Done',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18),
-                          ),
+                          child: isLoading
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  'Done',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18),
+                                ),
                         ),
                       ),
                       SizedBox(height: 50),

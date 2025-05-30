@@ -405,8 +405,7 @@ class _Manage_ServicesState extends State<Manage_Services> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: Icon(Icons.edit,
-                    color: Color.fromARGB(255, 192, 228, 194), size: 24),
+                icon: Icon(Icons.edit, color: Colors.white, size: 24),
                 onPressed: () => _editPriceDialog(title),
               ),
               if (canDelete)
@@ -425,6 +424,12 @@ class _Manage_ServicesState extends State<Manage_Services> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          leading: BackButton(
+            color: const Color.fromARGB(255, 144, 223, 170),
+          ),
+        ),
         backgroundColor: Colors.white,
         body: Column(
           children: [
@@ -442,13 +447,13 @@ class _Manage_ServicesState extends State<Manage_Services> {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 192, 228, 194),
+                        color: Color.fromRGBO(22, 121, 171, 1.0),
                       ),
                     ),
                   ),
                   FloatingActionButton(
                     mini: true,
-                    backgroundColor: Color.fromARGB(255, 192, 228, 194),
+                    backgroundColor: Color.fromRGBO(22, 121, 171, 1.0),
                     onPressed: _addServiceDialog,
                     child: Icon(Icons.add, color: Colors.white),
                   ),

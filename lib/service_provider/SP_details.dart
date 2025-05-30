@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
+import 'package:flutter_application_33/service_provider/upload_profile_photo.dart';
 
 class SP_details extends StatefulWidget {
   final Map<String, dynamic>? providerData;
@@ -24,7 +25,7 @@ class _SP_detailsState extends State<SP_details> {
   String providerId = '';
   String memberSince = '';
   Map<String, dynamic>? providerData;
-
+  String? profileImageUrl;
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _carBrandController = TextEditingController();
@@ -72,6 +73,7 @@ class _SP_detailsState extends State<SP_details> {
         _usernameController.text = providerName == '"Name"' ? '' : providerName;
         _emailController.text = providerEmail;
         _carBrandController.text = carBrand;
+        profileImageUrl = providerData!['profileImageUrl'];
 
         if (providerData!['createdAt'] != null) {
           DateTime dateTime = providerData!['createdAt'].toDate();
@@ -330,15 +332,7 @@ class _SP_detailsState extends State<SP_details> {
                         padding: const EdgeInsets.all(12.0),
                         child: Row(
                           children: [
-                            CircleAvatar(
-                              radius: 45,
-                              backgroundColor: avatarColor,
-                              child: Text(getInitials(providerName),
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 23,
-                                      fontWeight: FontWeight.bold)),
-                            ),
+                            UploadPhotoSP(profileImage: profileImageUrl),
                             const SizedBox(width: 10),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
