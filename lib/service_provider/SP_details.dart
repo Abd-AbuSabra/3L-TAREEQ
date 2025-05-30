@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
-import 'package:flutter_application_33/service_provider/upload_profile_photo.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class SP_details extends StatefulWidget {
   final Map<String, dynamic>? providerData;
@@ -26,12 +28,14 @@ class _SP_detailsState extends State<SP_details> {
   String memberSince = '';
   Map<String, dynamic>? providerData;
   String? profileImageUrl;
+  Uint8List? _webImageBytes; // For storing picked image
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _carBrandController = TextEditingController();
   final TextEditingController ServiceController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isUploadingImage = false;
 
   @override
   void initState() {
@@ -74,7 +78,6 @@ class _SP_detailsState extends State<SP_details> {
         _emailController.text = providerEmail;
         _carBrandController.text = carBrand;
         profileImageUrl = providerData!['profileImageUrl'];
-
         if (providerData!['createdAt'] != null) {
           DateTime dateTime = providerData!['createdAt'].toDate();
           memberSince = DateFormat('MMMM yyyy').format(dateTime);
@@ -100,6 +103,145 @@ class _SP_detailsState extends State<SP_details> {
     } catch (e) {
       print("Error fetching provider data: $e");
     }
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _webImageBytes = bytes;
+      });
+
+      // Automatically upload the image when picked
+      await _uploadProfileImage();
+    }
+  }
+
+  Future<void> _uploadProfileImage() async {
+    if (_webImageBytes == null) return;
+
+    setState(() {
+      _isUploadingImage = true;
+    });
+
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        // Create a reference to Firebase Storage
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('provider_images')
+            .child('${currentUser.uid}.jpg');
+
+        // Upload the image
+        await storageRef.putData(_webImageBytes!);
+
+        // Get the download URL
+        final downloadUrl = await storageRef.getDownloadURL();
+
+        // Update Firestore with the new image URL
+        await FirebaseFirestore.instance
+            .collection('providers')
+            .doc(currentUser.uid)
+            .update({'profileImageUrl': downloadUrl});
+
+        setState(() {
+          profileImageUrl = downloadUrl;
+          _webImageBytes = null; // Clear the temporary image
+        });
+
+        // Update the provider data
+        if (providerData != null) {
+          providerData!['profileImageUrl'] = downloadUrl;
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("Profile image updated successfully!"),
+            backgroundColor: customGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      print("Error uploading image: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Failed to update profile image. Please try again."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _webImageBytes = null; // Clear the temporary image on error
+      });
+    } finally {
+      setState(() {
+        _isUploadingImage = false;
+      });
+    }
+  }
+
+  Widget _buildProfileImage() {
+    return Stack(
+      alignment: Alignment.bottomRight,
+      children: [
+        CircleAvatar(
+          radius: 40,
+          backgroundColor: Colors.grey.shade100,
+          backgroundImage: _webImageBytes != null
+              ? MemoryImage(_webImageBytes!)
+              : (profileImageUrl != null && profileImageUrl!.isNotEmpty)
+                  ? NetworkImage(profileImageUrl!)
+                  : null,
+          child: (profileImageUrl == null || profileImageUrl!.isEmpty) &&
+                  _webImageBytes == null
+              ? Text(
+                  getInitials(providerName),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                )
+              : null,
+        ),
+        if (_isUploadingImage)
+          Positioned(
+            bottom: -4,
+            right: -4,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              child: const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          )
+        else
+          Positioned(
+            bottom: -4,
+            right: -4,
+            child: GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                ),
+                child: const Icon(Icons.edit, color: Colors.black, size: 16),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   void _editFieldDialog(String fieldTitle, TextEditingController controller,
@@ -332,7 +474,7 @@ class _SP_detailsState extends State<SP_details> {
                         padding: const EdgeInsets.all(12.0),
                         child: Row(
                           children: [
-                            UploadPhotoSP(profileImage: profileImageUrl),
+                            _buildProfileImage(), // Use the new profile image widget
                             const SizedBox(width: 10),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
@@ -373,14 +515,6 @@ class _SP_detailsState extends State<SP_details> {
                       "Email", providerEmail, _emailController),
                   _buildEditableDetailCard(
                       "Car Brand", carBrand, _carBrandController),
-                  // _buildEditableDetailCard(
-                  //     "Services",
-                  //     services.isEmpty
-                  //         ? "Not available"
-                  //         : services.entries
-                  //             .map((e) => "${e.key}: \$${e.value}")
-                  //             .join("\n"),
-                  //     ServiceController),
                   _buildNonEditableDetailCard("Member Since", memberSince),
                   const SizedBox(height: 20),
                   if (_isLoading)

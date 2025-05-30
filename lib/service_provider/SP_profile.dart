@@ -130,6 +130,7 @@ class _SP_profileState extends State<SP_profile> {
                               child: Row(
                                 children: [
                                   CircleAvatar(
+                                    backgroundColor: Colors.grey.shade100,
                                     radius: 45,
                                     backgroundImage: profileImageUrl != null
                                         ? NetworkImage(profileImageUrl!)
