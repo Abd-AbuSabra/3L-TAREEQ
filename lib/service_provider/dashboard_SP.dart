@@ -18,7 +18,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
   String providerName = 'Provider';
   double providerRating = 0;
   String joinedDateString = '';
-
+  String? profileImageUrl;
   final TextEditingController reviewController = TextEditingController();
 
   @override
@@ -42,6 +42,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         setState(() {
           providerName = data['username'] ?? 'Unnamed Provider';
           providerRating = (data['rating'] ?? 0).toDouble();
+          profileImageUrl = data['profileImageUrl'];
 
           final Timestamp? joinedAt = data['joinedAt'];
           if (joinedAt != null) {
@@ -233,9 +234,12 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
           padding: const EdgeInsets.all(12.0),
           child: Row(
             children: [
-              const CircleAvatar(
-                radius: 60,
-                backgroundImage: AssetImage('assets/profile.jpg'),
+              CircleAvatar(
+                backgroundColor: Colors.grey.shade100,
+                radius: 45,
+                backgroundImage: profileImageUrl != null
+                    ? NetworkImage(profileImageUrl!)
+                    : const AssetImage('assets/profile.jpg') as ImageProvider,
               ),
               const SizedBox(width: 10),
               Expanded(

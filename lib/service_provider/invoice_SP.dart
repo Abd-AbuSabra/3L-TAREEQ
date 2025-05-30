@@ -49,7 +49,7 @@ class _invoice_SPState extends State<invoice_SP> {
       final acceptedProviderQuery = await FirebaseFirestore.instance
           .collection('acceptedProviders')
           .where('providerId', isEqualTo: user.uid)
-          .where('isAccepted', isEqualTo: true)
+          .where('isAccepted', isEqualTo: false)
           .limit(1)
           .get();
 

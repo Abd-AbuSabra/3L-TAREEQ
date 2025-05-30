@@ -131,8 +131,9 @@ class _live_track_userState extends State<live_track_user> {
                                       top: 0,
                                       right: 0,
                                       child: IconButton(
+                                        color: Colors.red,
                                         onPressed: () {},
-                                        icon: const Icon(Icons.close),
+                                        icon: const Icon(Icons.cancel),
                                       ),
                                     ),
                                     _buildContent(),
