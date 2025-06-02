@@ -17,6 +17,7 @@ class Dashboard_SP extends StatefulWidget {
 
 class _Dashboard_SPState extends State<Dashboard_SP> {
   String providerName = 'Provider';
+  String providerId = '';
   double providerRating = 0;
   String joinedDateString = '';
   String? profileImageUrl;
@@ -26,6 +27,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
   void initState() {
     super.initState();
     loadProviderData();
+    checkBookedStatusAndNavigate();
   }
 
   Future<void> loadProviderData() async {
@@ -160,10 +162,6 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Request Accepted')),
       );
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => live_track_SP()),
-      );
     } catch (e) {
       print("Error accepting service request: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -189,6 +187,48 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
       print("Error declining service request: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error declining request')),
+      );
+    }
+  }
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  Future<void> checkBookedStatusAndNavigate() async {
+    try {
+      // Query the collection to find document by providerId
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('acceptedProviders')
+          .where('providerId',
+              isEqualTo: FirebaseAuth.instance.currentUser?.uid ?? '')
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Get the first document (assuming providerId is unique)
+        DocumentSnapshot doc = querySnapshot.docs.first;
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+        // Check if Booked field is true
+        if (data['Booked'] == true) {
+          // Navigate to live_track_SP page
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => live_track_SP()),
+          );
+        } else {
+          // Show message if not booked
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Provider is not currently booked')),
+          );
+        }
+      } else {
+        // No document found with this providerId
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Provider not found')),
+        );
+      }
+    } catch (e) {
+      print('Error checking booked status: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to check booking status')),
       );
     }
   }

@@ -48,11 +48,13 @@ class _live_track_userState extends State<live_track_user> {
   void initState() {
     super.initState();
     _fetchProviderData();
+    _listenForAcceptedProvider();
   }
 
   @override
   void dispose() {
     _acceptedProviderSubscription?.cancel();
+    _subscription?.cancel();
     super.dispose();
   }
 
@@ -89,7 +91,6 @@ class _live_track_userState extends State<live_track_user> {
         });
 
         // Start monitoring the isAccepted field
-        _startMonitoringAcceptedStatus();
       } else {
         setState(() {
           errorMessage = "No accepted provider found";
@@ -104,27 +105,34 @@ class _live_track_userState extends State<live_track_user> {
     }
   }
 
-  void _startMonitoringAcceptedStatus() {
-    if (_documentId == null) return;
-
-    _acceptedProviderSubscription = _firestore
+  StreamSubscription<QuerySnapshot>? _subscription;
+  void _listenForAcceptedProvider() {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    _subscription = FirebaseFirestore.instance
         .collection('acceptedProviders')
-        .doc(_documentId)
+        .where('userId', isEqualTo: user.uid)
+        .where('isAccepted', isEqualTo: false)
+        .limit(1)
         .snapshots()
-        .listen((DocumentSnapshot snapshot) {
-      if (snapshot.exists) {
-        final data = snapshot.data() as Map<String, dynamic>;
-        final isAccepted = data['isAccepted'] ?? true;
+        .listen((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        final providerData =
+            snapshot.docs.first.data() as Map<String, dynamic>?;
+        if (providerData != null && mounted) {
+          _subscription?.cancel(); // prevent multiple triggers
 
-        if (!isAccepted) {
-          // Navigate to Invoice_user page when isAccepted becomes false
-          _acceptedProviderSubscription?.cancel();
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => Invoice_user(),
-            ),
-          );
+          // Add delay before navigation
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Invoice_user(),
+                ),
+              );
+            }
+          });
         }
       }
     });

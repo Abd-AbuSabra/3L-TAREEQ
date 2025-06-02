@@ -58,7 +58,6 @@ void main() async {
   }).catchError((e) {
     print("Error initializing Firebase: $e");
   });
-
   runApp(ChangeNotifierProvider(
     create: (context) => AuthService(),
     child: const MyApp(),

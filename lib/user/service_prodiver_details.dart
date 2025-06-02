@@ -34,6 +34,34 @@ class ServiceProviderDetailsPage extends StatefulWidget {
 class _ServiceProviderDetailsPageState
     extends State<ServiceProviderDetailsPage> {
   bool isBooking = false;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  Future<void> updateBookedStatus() async {
+    try {
+      // Update the Booked field to true for the specific userId
+      await _firestore
+          .collection('acceptedProviders')
+          .where('userId',
+              isEqualTo: FirebaseAuth.instance.currentUser?.uid ?? '')
+          .get()
+          .then((QuerySnapshot querySnapshot) {
+        querySnapshot.docs.forEach((doc) {
+          doc.reference.update({'Booked': true});
+        });
+      });
+
+      // Navigate to live_track_user page
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => live_track_user()),
+      );
+    } catch (e) {
+      print('Error updating booked status: $e');
+      // You can show a snackbar or dialog here to inform the user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update booking status')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -195,11 +223,7 @@ class _ServiceProviderDetailsPageState
                           children: [
                             ElevatedButton(
                               onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => live_track_user()),
-                                );
+                                updateBookedStatus();
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor:
