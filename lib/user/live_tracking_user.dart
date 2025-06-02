@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_33/google_maps/map.dart';
 import 'package:flutter_application_33/universal_components/Menu.dart';
@@ -15,6 +16,7 @@ import 'package:flutter_application_33/user/Users_profile.dart';
 import 'package:flutter_application_33/user/search_for_service.dart';
 import 'package:flutter_application_33/user/PhoneNumber.dart';
 import 'package:flutter_application_33/user/chat_with_provider.dart';
+import 'package:flutter_application_33/user/Invoice_user.dart'; // Add this import
 
 import 'package:flutter_application_33/user/dashboard_user.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -39,11 +41,19 @@ class _live_track_userState extends State<live_track_user> {
   Map<String, dynamic>? providerData;
   bool isLoading = true;
   String? errorMessage;
+  StreamSubscription<DocumentSnapshot>? _acceptedProviderSubscription;
+  String? _documentId; // Store the document ID for monitoring
 
   @override
   void initState() {
     super.initState();
     _fetchProviderData();
+  }
+
+  @override
+  void dispose() {
+    _acceptedProviderSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchProviderData() async {
@@ -70,11 +80,16 @@ class _live_track_userState extends State<live_track_user> {
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        _documentId = doc.id; // Store the document ID
+
         setState(() {
-          providerData =
-              querySnapshot.docs.first.data() as Map<String, dynamic>;
+          providerData = doc.data() as Map<String, dynamic>;
           isLoading = false;
         });
+
+        // Start monitoring the isAccepted field
+        _startMonitoringAcceptedStatus();
       } else {
         setState(() {
           errorMessage = "No accepted provider found";
@@ -87,6 +102,47 @@ class _live_track_userState extends State<live_track_user> {
         isLoading = false;
       });
     }
+  }
+
+  void _startMonitoringAcceptedStatus() {
+    if (_documentId == null) return;
+
+    _acceptedProviderSubscription = _firestore
+        .collection('acceptedProviders')
+        .doc(_documentId)
+        .snapshots()
+        .listen((DocumentSnapshot snapshot) {
+      if (snapshot.exists) {
+        final data = snapshot.data() as Map<String, dynamic>;
+        final isAccepted = data['isAccepted'] ?? true;
+
+        if (!isAccepted) {
+          // Navigate to Invoice_user page when isAccepted becomes false
+          _acceptedProviderSubscription?.cancel();
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Invoice_user(),
+            ),
+          );
+        }
+      }
+    });
+  }
+
+  String _getServicesText() {
+    if (providerData?['services'] == null) return 'Service details';
+
+    Map<String, dynamic> services = providerData!['services'];
+    List<String> serviceList = [];
+
+    services.forEach((key, value) {
+      if (value is num && value > 0 && key != 'Service') {
+        serviceList.add(key);
+      }
+    });
+
+    return serviceList.isEmpty ? 'Service details' : serviceList.join(', ');
   }
 
   @override
@@ -252,12 +308,6 @@ class _live_track_userState extends State<live_track_user> {
                   : const AssetImage('assets/profile.jpg') as ImageProvider,
             ),
             const SizedBox(height: 8),
-            Text(
-              "Rating: ${providerData!['rating']?.toString() ?? 'N/A'}",
-              style: const TextStyle(
-                color: Color.fromRGBO(22, 121, 171, 1.0),
-              ),
-            ),
             RatingBarIndicator(
               rating: providerData!['rating']?.toDouble() ?? 0.0,
               itemBuilder: (context, index) => Icon(
@@ -286,7 +336,7 @@ class _live_track_userState extends State<live_track_user> {
               ),
               const SizedBox(height: 6),
               Text(
-                providerData!['serviceName'] ?? 'Unknown Service',
+                _getServicesText(),
                 style: const TextStyle(
                   fontSize: 16,
                   color: Color.fromRGBO(22, 121, 171, 1.0),
@@ -300,13 +350,13 @@ class _live_track_userState extends State<live_track_user> {
                       onPressed: () {
                         // Navigate to chat/message screen
                         if (providerData!['providerId'] != null &&
-                            providerData!['providerEmail'] != null) {
+                            providerData!['name'] != null) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => ChatScreen(
                                 receiverUserID: providerData!['providerId'],
-                                receiverEmail: providerData!['providerEmail'],
+                                receiverName: providerData!['name'],
                               ),
                             ),
                           );

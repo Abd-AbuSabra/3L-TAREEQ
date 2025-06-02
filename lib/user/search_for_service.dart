@@ -6,6 +6,8 @@ import 'package:animated_background/animated_background.dart';
 import 'package:flutter_application_33/components/auth_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application_33/user/select_service_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class SearchForService extends StatefulWidget {
   const SearchForService({super.key});
@@ -37,6 +39,15 @@ class _SearchForServiceState extends State<SearchForService>
     "10-20 min": TextEditingController(text: "10-20 min"),
   };
 
+  String name = '';
+  Map<String, dynamic>? userData;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
   @override
   void dispose() {
     for (var controller in serviceControllers.values) {
@@ -46,6 +57,30 @@ class _SearchForServiceState extends State<SearchForService>
       controller.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> fetchUserData() async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+
+        if (userDoc.exists) {
+          userData = userDoc.data() as Map<String, dynamic>;
+
+          setState(() {
+            name = userData!['username'] ?? '"Name"';
+            Timestamp createdAt = userData!['createdAt'];
+            DateTime createdAtDate = createdAt.toDate();
+          });
+        }
+      }
+    } catch (e) {
+      print("Error fetching user data: $e");
+    }
   }
 
   Future<List<Map<String, dynamic>>> fetchMatchingProviders(
@@ -114,6 +149,8 @@ class _SearchForServiceState extends State<SearchForService>
         batch.set(requestRef, {
           'userId': user.uid,
           'userEmail': user.email,
+          'name': name,
+          'Booked': false,
           'userMobile': '',
           'targetProviderId':
               provider['uid'], // specific provider this request is for

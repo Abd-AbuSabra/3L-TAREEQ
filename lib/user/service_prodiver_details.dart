@@ -7,8 +7,10 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_application_33/pop_ups/rating.dart';
 import 'package:flutter_application_33/user/provider_reviews.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class ServiceProviderDetailsPage extends StatelessWidget {
+class ServiceProviderDetailsPage extends StatefulWidget {
   final String name;
   final double rating;
   final String mobile;
@@ -23,6 +25,15 @@ class ServiceProviderDetailsPage extends StatelessWidget {
     required this.services,
     required this.providerId,
   }) : super(key: key);
+
+  @override
+  State<ServiceProviderDetailsPage> createState() =>
+      _ServiceProviderDetailsPageState();
+}
+
+class _ServiceProviderDetailsPageState
+    extends State<ServiceProviderDetailsPage> {
+  bool isBooking = false;
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +80,7 @@ class ServiceProviderDetailsPage extends StatelessWidget {
                               children: [
                                 const SizedBox(height: 20),
                                 Text(
-                                  name,
+                                  widget.name,
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -78,7 +89,7 @@ class ServiceProviderDetailsPage extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 15),
                                 RatingBarIndicator(
-                                  rating: rating,
+                                  rating: widget.rating,
                                   itemBuilder: (context, _) => const Icon(
                                     Icons.star,
                                     color: Colors.amber,
@@ -97,7 +108,8 @@ class ServiceProviderDetailsPage extends StatelessWidget {
                                         MaterialPageRoute(
                                           builder: (context) =>
                                               ProviderReviewsPage(
-                                                  providerId: providerId),
+                                                  providerId:
+                                                      widget.providerId),
                                         ),
                                       );
                                     },
@@ -150,8 +162,8 @@ class ServiceProviderDetailsPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 40),
-                        if (services.isNotEmpty)
-                          ...services.entries.map(
+                        if (widget.services.isNotEmpty)
+                          ...widget.services.entries.map(
                             (entry) => Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 50.0, vertical: 8),
@@ -165,7 +177,7 @@ class ServiceProviderDetailsPage extends StatelessWidget {
                               ),
                             ),
                           ),
-                        if (services.isEmpty)
+                        if (widget.services.isEmpty)
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 50.0),
                             child: Text(
@@ -183,9 +195,10 @@ class ServiceProviderDetailsPage extends StatelessWidget {
                           children: [
                             ElevatedButton(
                               onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => live_track_user(),
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => live_track_user()),
                                 );
                               },
                               style: ElevatedButton.styleFrom(
@@ -197,14 +210,23 @@ class ServiceProviderDetailsPage extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
-                              child: const Text(
-                                'Book',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                ),
-                              ),
+                              child: isBooking
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Book',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
                             ),
                           ],
                         ),

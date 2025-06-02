@@ -48,7 +48,7 @@ class _RegisterState extends State<Register> with TickerProviderStateMixin {
       );
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => Apply()),
+        MaterialPageRoute(builder: (context) => PN()),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_33/user/dashboard_user.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -53,7 +54,10 @@ class _Rating_popupState extends State<Rating_popup> {
 
       // Clear input and close popup
       _controller.clear();
-      Navigator.of(context).pop();
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => user_dashboard()),
+      );
     } catch (e) {
       print('Error submitting review: $e');
       // Optionally, show an error message here
@@ -81,7 +85,7 @@ class _Rating_popupState extends State<Rating_popup> {
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    icon: Icon(Icons.close, color: Colors.grey.shade200),
+                    icon: Icon(Icons.close, color: Colors.red),
                     iconSize: 30,
                   ),
                 ],

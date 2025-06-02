@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -80,6 +81,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
       final providerId = FirebaseAuth.instance.currentUser?.uid ?? '';
       final providerEmail = FirebaseAuth.instance.currentUser?.email ?? '';
       final userEmail = data['userEmail'] ?? '';
+      final name = data['name'] ?? '';
       final userSelectedServices =
           data['services'] ?? []; // Services user actually selected
       final times = data['times'] ?? [];
@@ -141,6 +143,8 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         'userId': userId,
         'userEmail': userEmail,
         'userMobile': '',
+        'name': name,
+        'Booked': false,
         'providerId': providerId,
         'username': providerName,
         'providerEmail': providerEmail,
@@ -153,13 +157,12 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      showDialog(
-        context: context,
-        builder: (context) => live_track_SP(),
-      );
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Request Accepted')),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => live_track_SP()),
       );
     } catch (e) {
       print("Error accepting service request: $e");

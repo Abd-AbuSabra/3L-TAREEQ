@@ -11,12 +11,12 @@ import '../../services/chat_service.dart';
 
 class ChatWithCustomer extends StatefulWidget {
   final String receiverUserID;
-  final String receiverEmail;
+  final String receiverName;
 
   const ChatWithCustomer({
     super.key,
     required this.receiverUserID,
-    required this.receiverEmail,
+    required this.receiverName,
   });
 
   @override
@@ -32,9 +32,7 @@ class _ChatWithCustomerState extends State<ChatWithCustomer> {
   void sendMessage() async {
     if (_controller.text.trim().isNotEmpty) {
       await _chatService.sendMessage(
-        widget.receiverUserID,
-        _controller.text.trim(),
-      );
+          widget.receiverUserID, _controller.text.trim(), widget.receiverName);
       _controller.clear();
     }
   }

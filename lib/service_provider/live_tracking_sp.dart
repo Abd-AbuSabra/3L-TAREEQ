@@ -167,11 +167,9 @@ class _live_track_SPState extends State<live_track_SP> {
                                           top: 0,
                                           right: 0,
                                           child: IconButton(
-                                            onPressed: () {
-                                              // Refresh data
-                                              _fetchUserData();
-                                            },
-                                            icon: const Icon(Icons.refresh),
+                                            color: Colors.red,
+                                            onPressed: () {},
+                                            icon: const Icon(Icons.cancel),
                                           ),
                                         ),
                                         _buildContent(),
@@ -347,7 +345,7 @@ class _live_track_SPState extends State<live_track_SP> {
         ),
 
         Text(
-          userData!['username'] ?? 'Unknown User',
+          userData!['name'] ?? 'Unknown User',
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -363,7 +361,7 @@ class _live_track_SPState extends State<live_track_SP> {
           ),
         ),
         const SizedBox(height: 5),
-        if (userData!['userEmail'] != null)
+        if (userData!['name'] != null)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -372,13 +370,13 @@ class _live_track_SPState extends State<live_track_SP> {
                 child: IconButton(
                   onPressed: () {
                     if (userData!['userId'] != null &&
-                        userData!['userEmail'] != null) {
+                        userData!['username'] != null) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => ChatWithCustomer(
                             receiverUserID: userData!['userId'],
-                            receiverEmail: userData!['userEmail'],
+                            receiverName: userData!['username'],
                           ),
                         ),
                       );

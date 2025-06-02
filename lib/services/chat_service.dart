@@ -3,29 +3,25 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application_33/model/message.dart';
 
 class ChatService {
- 
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> sendMessage(String receiverId, String message) async {
-    
+  Future<void> sendMessage(
+      String receiverId, String message, String senderName) async {
     final String senderId = _firebaseAuth.currentUser!.uid;
-    final String senderEmail = _firebaseAuth.currentUser!.email!;
     final Timestamp timestamp = Timestamp.now();
 
     Message newMessage = Message(
       senderId: senderId,
-      senderEmail: senderEmail,
+      senderName: senderName,
       receiverId: receiverId,
       message: message,
       timestamp: timestamp,
     );
 
-  
     List<String> ids = [senderId, receiverId];
     ids.sort();
     String chatRoomId = ids.join("_");
-
 
     await _firestore
         .collection("chat_rooms")
