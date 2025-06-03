@@ -9,6 +9,19 @@ import 'package:flutter_application_33/pop_ups/rating.dart';
 import 'package:flutter_application_33/user/provider_reviews.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_application_33/user/live_tracking_user.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:flutter_application_33/user/provider_reviews.dart';
+import 'package:flutter_application_33/universal_components/project_logo.dart';
+import 'package:flutter_application_33/user/service_prodiver_details.dart';
+import 'package:flutter_application_33/universal_components/Menu.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_application_33/service_provider/invoice_SP.dart';
+import 'package:flutter_application_33/universal_components/project_logo.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:flutter_application_33/service_provider/live_tracking_sp.dart';
+import 'dart:async';
 
 class ServiceProviderDetailsPage extends StatefulWidget {
   final String name;
@@ -61,6 +74,46 @@ class _ServiceProviderDetailsPageState
         SnackBar(content: Text('Failed to update booking status')),
       );
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    startListeningForBookedStatus();
+  }
+
+  @override
+  void dispose() {
+    // Cancel the listener when widget is disposed
+    _bookedStatusListener?.cancel();
+    super.dispose();
+  }
+
+  StreamSubscription<QuerySnapshot>? _bookedStatusListener;
+  void startListeningForBookedStatus() {
+    _bookedStatusListener = _firestore
+        .collection('acceptedProviders')
+        .where('userId',
+            isEqualTo: FirebaseAuth.instance.currentUser?.uid ?? '')
+        .snapshots()
+        .listen((QuerySnapshot snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        DocumentSnapshot doc = snapshot.docs.first;
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+        // Check if Booked field is true
+        if (data['Booked'] == true) {
+          // Automatically navigate to live_track_SP page
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => live_track_user()),
+          );
+
+          // Optional: Cancel the listener after navigation to prevent multiple navigations
+          _bookedStatusListener?.cancel();
+        }
+      }
+    });
   }
 
   @override
