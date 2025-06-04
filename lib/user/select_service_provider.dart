@@ -42,7 +42,7 @@ class _ServiceProviderPageState extends State<ServiceProviderPage> {
   void startListeningForBookedStatus() {
     _bookedStatusListener = _firestore
         .collection('acceptedProviders')
-        .where('providerId',
+        .where('userId',
             isEqualTo: FirebaseAuth.instance.currentUser?.uid ?? '')
         .snapshots()
         .listen((QuerySnapshot snapshot) {

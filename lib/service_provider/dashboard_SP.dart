@@ -86,25 +86,20 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
   Future<void> acceptServiceRequest(
       String docId, Map<String, dynamic> data) async {
     try {
-      final userId = data['userId']; // user who requested
+      final userId = data['userId'];
       final providerId = FirebaseAuth.instance.currentUser?.uid ?? '';
       final providerEmail = FirebaseAuth.instance.currentUser?.email ?? '';
       final userEmail = data['userEmail'] ?? '';
       final name = data['name'] ?? '';
-      final userSelectedServices =
-          data['services'] ?? []; // Services user actually selected
+      final userSelectedServices = data['services'] ?? [];
       final times = data['times'] ?? [];
-      // Get provider's service pricing
       final providerDoc = await FirebaseFirestore.instance
           .collection('providers')
           .doc(providerId)
           .get();
-
       final providerData = providerDoc.data() ?? {};
       final providerServices =
           providerData['services'] as Map<String, dynamic>? ?? {};
-
-      // Create filtered services map with only user-selected services and their prices
       Map<String, dynamic> filteredServices = {};
       for (String service in userSelectedServices) {
         if (providerServices.containsKey(service)) {
@@ -114,7 +109,6 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
       if (providerServices.containsKey('Service')) {
         filteredServices['Service'] = providerServices['Service'];
       }
-      // 1. Update the serviceRequest doc status to accepted, and assign providerId
       await FirebaseFirestore.instance
           .collection('serviceRequests')
           .doc(docId)
@@ -124,14 +118,11 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         'providerId': providerId,
         'providerEmail': providerEmail
       });
-
-      // 2. Mark other pending requests for this user as expired
       final otherRequestsQuery = await FirebaseFirestore.instance
           .collection('serviceRequests')
           .where('userId', isEqualTo: userId)
           .where('status', isEqualTo: 'pending')
           .get();
-
       final batch = FirebaseFirestore.instance.batch();
       for (var doc in otherRequestsQuery.docs) {
         if (doc.id != docId) {
@@ -143,8 +134,6 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         }
       }
       await batch.commit();
-
-      // 3. Create or update acceptedProviders document
       await FirebaseFirestore.instance
           .collection('acceptedProviders')
           .doc(userId)
@@ -157,15 +146,13 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         'providerId': providerId,
         'username': providerName,
         'providerEmail': providerEmail,
-        'services':
-            filteredServices, // Only user-selected services with their prices
+        'services': filteredServices,
         'times': times,
         'rating': providerRating,
         'providerMobile': providerData['mobile'] ?? '',
         'isAccepted': true,
         'timestamp': FieldValue.serverTimestamp(),
       });
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Request Accepted')),
       );

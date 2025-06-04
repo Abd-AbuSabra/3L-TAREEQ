@@ -97,7 +97,6 @@ class _SearchForServiceState extends State<SearchForService>
       final providerServices = data['services'] as Map<String, dynamic>?;
 
       if (providerServices != null) {
-        // Check if provider has all selected services
         bool hasAllServices = selectedServices
             .every((service) => providerServices.containsKey(service));
 
@@ -115,22 +114,16 @@ class _SearchForServiceState extends State<SearchForService>
     final selectedServiceTexts = selectedServices
         .map((service) => serviceControllers[service]?.text ?? service)
         .toList();
-
     final selectedTimeTexts = selectedTimes
         .map((time) => timeControllers[time]?.text ?? time)
         .toList();
-
     try {
       final authService = AuthService();
       final user = authService.currentUser;
       if (user == null) return;
-
-      // Fetch providers matching selected services
       final providers = await fetchMatchingProviders(selectedServiceTexts);
       print('Found ${providers.length} matching providers');
-
       if (providers.isEmpty) {
-        // Handle no providers found case
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text(
@@ -138,50 +131,37 @@ class _SearchForServiceState extends State<SearchForService>
         );
         return;
       }
-
-      // Create individual service requests for each matching provider
       final batch = FirebaseFirestore.instance.batch();
-
       for (var provider in providers) {
         final requestRef =
             FirebaseFirestore.instance.collection('serviceRequests').doc();
-
         batch.set(requestRef, {
           'userId': user.uid,
           'userEmail': user.email,
           'name': name,
           'Booked': false,
           'userMobile': '',
-          'targetProviderId':
-              provider['uid'], // specific provider this request is for
+          'targetProviderId': provider['uid'],
           'services': selectedServiceTexts,
           'times': selectedTimeTexts,
           'timestamp': FieldValue.serverTimestamp(),
           'status': 'pending',
-          'providerId': '', // will be filled when accepted
+          'providerId': '',
           'providerEmail': '',
         });
       }
-
-      // Save user selection
       final selectionRef =
           FirebaseFirestore.instance.collection('userSelections').doc(user.uid);
-
       batch.set(selectionRef, {
         'services': selectedServiceTexts,
         'times': selectedTimeTexts,
         'timestamp': FieldValue.serverTimestamp(),
       });
-
       await batch.commit();
-
-      // Go to loading screen
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const Loading()),
       );
-
-      // Listen for acceptance by providers
       FirebaseFirestore.instance
           .collection('acceptedProviders')
           .where('userId', isEqualTo: user.uid)
@@ -191,7 +171,6 @@ class _SearchForServiceState extends State<SearchForService>
           .listen((snapshot) {
         if (snapshot.docs.isNotEmpty) {
           final accepted = snapshot.docs.first.data();
-
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(

@@ -22,6 +22,7 @@ class _RegisterState extends State<Register> with TickerProviderStateMixin {
   final passwordController = TextEditingController();
   final confirmpasswordController = TextEditingController();
   final carBrandController = TextEditingController();
+  final PhoneController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
   bool isObscurePassword = true;
@@ -228,6 +229,34 @@ class _RegisterState extends State<Register> with TickerProviderStateMixin {
                             });
                           },
                         ),
+                        filled: true,
+                        fillColor: const Color(0xFFF1F1F1),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 18),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    )),
+                Padding(
+                    padding: const EdgeInsets.all(30.0),
+                    child: TextFormField(
+                      controller: PhoneController,
+                      obscureText: false,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your phone number';
+                        }
+
+                        if (value.length < 10) {
+                          return 'Phone number must be at least 10 digits long.';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        hintText: "+962XXXXXXXXX",
+                        hintStyle: TextStyle(fontSize: 16, color: Colors.grey),
                         filled: true,
                         fillColor: const Color(0xFFF1F1F1),
                         contentPadding: const EdgeInsets.symmetric(
