@@ -79,6 +79,37 @@ class _invoice_SPState extends State<invoice_SP> {
     }
   }
 
+  Future<void> updateProviderEnd() async {
+    try {
+      // Get current user ID
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+      if (currentUserId != null) {
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('acceptedProviders')
+            .where('providerId', isEqualTo: currentUserId)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          await querySnapshot.docs.first.reference
+              .update({'providerEnd': true});
+          print('providerEnd updated successfully');
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const Dashboard_SP()),
+          );
+        } else {
+          print('No document found for current provider');
+        }
+      } else {
+        print('No current provider found');
+      }
+    } catch (e) {
+      print('Error updating providerEnd: $e');
+    }
+  }
+
   // Add this method to calculate subtotal
   double getSubtotal() {
     final sub =
@@ -291,11 +322,7 @@ class _invoice_SPState extends State<invoice_SP> {
                           const SizedBox(height: 400),
                           ElevatedButton(
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const Dashboard_SP()),
-                              );
+                              updateProviderEnd();
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor:

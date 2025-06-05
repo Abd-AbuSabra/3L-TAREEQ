@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_33/user/dashboard_user.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class Rating_popup extends StatefulWidget {
   final String providerId;
@@ -51,7 +53,7 @@ class _Rating_popupState extends State<Rating_popup> {
 
       // Update provider with new average rating
       await providerRef.update({'rating': avgRating});
-
+      updateUserEnd();
       // Clear input and close popup
       _controller.clear();
       Navigator.push(
@@ -61,6 +63,31 @@ class _Rating_popupState extends State<Rating_popup> {
     } catch (e) {
       print('Error submitting review: $e');
       // Optionally, show an error message here
+    }
+  }
+
+  Future<void> updateUserEnd() async {
+    try {
+      // Get current user ID
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+      if (currentUserId != null) {
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('acceptedProviders')
+            .where('userId', isEqualTo: currentUserId)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          await querySnapshot.docs.first.reference.update({'userEnd': true});
+          print('UserEnd updated successfully');
+        } else {
+          print('No document found for current user');
+        }
+      } else {
+        print('No current user found');
+      }
+    } catch (e) {
+      print('Error updating userEnd: $e');
     }
   }
 
