@@ -142,6 +142,8 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         'userEmail': userEmail,
         'userMobile': '',
         'name': name,
+        'userEnd': false,
+        'providerEnd': false,
         'Booked': false,
         'providerId': providerId,
         'username': providerName,
@@ -154,7 +156,9 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         'timestamp': FieldValue.serverTimestamp(),
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Request Accepted')),
+        const SnackBar(
+            content: Text(
+                'Request Accepted, Please wait for the customer to confirm')),
       );
     } catch (e) {
       print("Error accepting service request: $e");
@@ -199,7 +203,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
         // Check if Booked field is true
-        if (data['Booked'] == true) {
+        if (data['Booked'] == true && data['isAccepted'] == true) {
           // Automatically navigate to live_track_SP page
           Navigator.push(
             context,

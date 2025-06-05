@@ -267,7 +267,6 @@ class _ApplyState extends State<Apply> {
                                                   _webImage!,
                                                   height: 130,
                                                   width: double.infinity,
-                                                  fit: BoxFit.cover,
                                                 )
                                               : Image.file(
                                                   _selectedImage!,

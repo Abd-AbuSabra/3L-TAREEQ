@@ -170,7 +170,7 @@ class _PricingState extends State<Pricing> {
         'services': servicesWithPrices,
         'isServiceProvider': true,
         'joinedAt': FieldValue.serverTimestamp(),
-        'rating': 1,
+        'rating': 0,
         if (imageUrl != null)
           'profileImageUrl': imageUrl, // Add image URL if available
       };
@@ -247,6 +247,16 @@ class _PricingState extends State<Pricing> {
                     );
                     return;
                   }
+                  if (double.tryParse(value)! < 3 ||
+                      double.tryParse(value)! > 200) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              "Please enter a number between 3 JD and 200 JD")),
+                    );
+                    return;
+                  }
+
                   setState(() {
                     controller.text = "$value \JD";
                   });
@@ -277,13 +287,13 @@ class _PricingState extends State<Pricing> {
                 style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 18),
+                    fontSize: 15),
               ),
               Text(controller.text,
                   style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 18)),
+                      fontSize: 15)),
             ],
           ),
           trailing: IconButton(

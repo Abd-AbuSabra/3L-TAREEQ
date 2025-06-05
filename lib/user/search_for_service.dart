@@ -139,6 +139,8 @@ class _SearchForServiceState extends State<SearchForService>
           'userId': user.uid,
           'userEmail': user.email,
           'name': name,
+          'userEnd': false,
+          'providerEnd': false,
           'Booked': false,
           'userMobile': '',
           'targetProviderId': provider['uid'],
@@ -271,36 +273,6 @@ class _SearchForServiceState extends State<SearchForService>
             );
           }).toList(),
           const SizedBox(height: 30),
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              "Near by me:",
-              style: TextStyle(
-                fontSize: 25,
-                color: Colors.grey,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          ...timeControllers.entries.map((entry) {
-            return CheckboxListTile(
-              title: Text(entry.value.text,
-                  style: const TextStyle(
-                      fontSize: 15,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold)),
-              value: selectedTimes.contains(entry.key),
-              onChanged: (isChecked) {
-                setState(() {
-                  if (isChecked!) {
-                    selectedTimes.add(entry.key);
-                  } else {
-                    selectedTimes.remove(entry.key);
-                  }
-                });
-              },
-            );
-          }).toList(),
           const SizedBox(height: 40),
           ElevatedButton(
             onPressed: confirmSelection,
