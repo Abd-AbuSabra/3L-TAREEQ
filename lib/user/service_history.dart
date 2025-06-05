@@ -10,6 +10,7 @@ import 'package:animated_background/animated_background.dart';
 import 'package:circular_menu/circular_menu.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 
 class Services extends StatefulWidget {
   const Services({super.key});
@@ -64,6 +65,56 @@ class _ServicesState extends State<Services> with TickerProviderStateMixin {
       print('Error moving document to history: $e');
       return false;
     }
+  }
+
+  StreamSubscription<QuerySnapshot>? _bothEndsListener;
+
+  void startListeningForBothEnds() {
+    try {
+      // Get current user ID
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+      if (currentUserId != null) {
+        // Start listening to the document changes
+        _bothEndsListener = FirebaseFirestore.instance
+            .collection('acceptedProviders')
+            .where('userId', isEqualTo: currentUserId)
+            .snapshots()
+            .listen((QuerySnapshot querySnapshot) {
+          if (querySnapshot.docs.isNotEmpty) {
+            final doc = querySnapshot.docs.first;
+            final data = doc.data() as Map<String, dynamic>;
+
+            bool userEnd = data['userEnd'] ?? false;
+            bool providerEnd = data['providerEnd'] ?? false;
+
+            if (userEnd && providerEnd) {
+              print('Both userEnd and providerEnd are now true');
+              // Trigger your action here
+              _onBothEndsComplete();
+            }
+          }
+        });
+      } else {
+        print('No current user found');
+      }
+    } catch (e) {
+      print('Error setting up listener: $e');
+    }
+  }
+
+  void _onBothEndsComplete() {
+    // Call moveCurrentUserServiceToHistory when both ends are true
+    print('Both ends completed - moving service to history');
+    moveCurrentUserServiceToHistory();
+
+    // Stop listening once both are true (optional)
+    stopListening();
+  }
+
+  void stopListening() {
+    _bothEndsListener?.cancel();
+    _bothEndsListener = null;
   }
 
   // Method to move current user's service to history
