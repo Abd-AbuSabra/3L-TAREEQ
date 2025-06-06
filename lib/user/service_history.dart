@@ -24,136 +24,6 @@ class _ServicesState extends State<Services> with TickerProviderStateMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Method to move document from acceptedProviders to history
-  Future<bool> moveToHistory(String userId) async {
-    try {
-      // Start a batch write to ensure atomicity
-      WriteBatch batch = _firestore.batch();
-
-      // Query the acceptedProviders collection for the document with matching userId
-      QuerySnapshot acceptedProvidersQuery = await _firestore
-          .collection('acceptedProviders')
-          .where('userId', isEqualTo: userId)
-          .get();
-
-      if (acceptedProvidersQuery.docs.isEmpty) {
-        print('No document found with userId: $userId');
-        return false;
-      }
-
-      // Get the first matching document
-      QueryDocumentSnapshot docToMove = acceptedProvidersQuery.docs.first;
-      Map<String, dynamic> docData = docToMove.data() as Map<String, dynamic>;
-
-      // Add timestamp for when it was moved to history
-      docData['movedToHistoryAt'] = FieldValue.serverTimestamp();
-      docData['status'] = 'completed'; // Optional: add status field
-
-      // Add the document to history collection
-      DocumentReference historyRef = _firestore.collection('history').doc();
-      batch.set(historyRef, docData);
-
-      // Delete the document from acceptedProviders collection
-      batch.delete(docToMove.reference);
-
-      // Commit the batch
-      await batch.commit();
-
-      print('Successfully moved document to history for userId: $userId');
-      return true;
-    } catch (e) {
-      print('Error moving document to history: $e');
-      return false;
-    }
-  }
-
-  StreamSubscription<QuerySnapshot>? _bothEndsListener;
-
-  void startListeningForBothEnds() {
-    try {
-      // Get current user ID
-      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-
-      if (currentUserId != null) {
-        // Start listening to the document changes
-        _bothEndsListener = FirebaseFirestore.instance
-            .collection('acceptedProviders')
-            .where('userId', isEqualTo: currentUserId)
-            .snapshots()
-            .listen((QuerySnapshot querySnapshot) {
-          if (querySnapshot.docs.isNotEmpty) {
-            final doc = querySnapshot.docs.first;
-            final data = doc.data() as Map<String, dynamic>;
-
-            bool userEnd = data['userEnd'] ?? false;
-            bool providerEnd = data['providerEnd'] ?? false;
-
-            if (userEnd && providerEnd) {
-              print('Both userEnd and providerEnd are now true');
-              // Trigger your action here
-              _onBothEndsComplete();
-            }
-          }
-        });
-      } else {
-        print('No current user found');
-      }
-    } catch (e) {
-      print('Error setting up listener: $e');
-    }
-  }
-
-  void _onBothEndsComplete() {
-    // Call moveCurrentUserServiceToHistory when both ends are true
-    print('Both ends completed - moving service to history');
-    moveCurrentUserServiceToHistory();
-
-    // Stop listening once both are true (optional)
-    stopListening();
-  }
-
-  void stopListening() {
-    _bothEndsListener?.cancel();
-    _bothEndsListener = null;
-  }
-
-  // Method to move current user's service to history
-  Future<void> moveCurrentUserServiceToHistory() async {
-    User? currentUser = _auth.currentUser;
-    if (currentUser != null) {
-      bool success = await moveToHistory(currentUser.uid);
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Service moved to history successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        // Refresh the UI if needed
-        setState(() {});
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to move service to history.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  // Method to get accepted providers for current user
-  Stream<QuerySnapshot> getAcceptedProviders() {
-    User? currentUser = _auth.currentUser;
-    if (currentUser != null) {
-      return _firestore
-          .collection('acceptedProviders')
-          .where('userId', isEqualTo: currentUser.uid)
-          .snapshots();
-    }
-    return const Stream.empty();
-  }
-
   // Method to get history for current user
   Stream<QuerySnapshot> getServiceHistory() {
     User? currentUser = _auth.currentUser;
@@ -167,10 +37,36 @@ class _ServicesState extends State<Services> with TickerProviderStateMixin {
     return const Stream.empty();
   }
 
+  // Method to calculate total price with tax
+  double calculateTotalWithTax(Map<String, dynamic> services) {
+    double total = 0;
+    services.forEach((key, value) {
+      if (value is num) {
+        total += value.toDouble();
+      }
+    });
+    // Add 16% tax
+    return total * 1.16;
+  }
+
+  // Method to format timestamp
+  String formatDate(Timestamp? timestamp) {
+    if (timestamp == null) return 'N/A';
+    DateTime date = timestamp.toDate();
+    return '${date.day}/${date.month}/${date.year} - ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Menu(
       child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: BackButton(
+            color: const Color.fromARGB(255, 144, 223, 170),
+          ),
+        ),
         backgroundColor: Colors.white,
         body: Stack(
           children: [
@@ -211,73 +107,189 @@ class _ServicesState extends State<Services> with TickerProviderStateMixin {
                           ],
                         ),
                       ),
-                      AnimationLimiter(
-                        child: Column(
-                          children: AnimationConfiguration.toStaggeredList(
-                            duration: const Duration(milliseconds: 1600),
-                            childAnimationBuilder: (widget) => SlideAnimation(
-                              horizontalOffset: 100.0,
-                              child: FadeInAnimation(child: widget),
-                            ),
-                            children: List.generate(4, (index) {
-                              final bool isEven = index % 2 == 0;
-                              final Color cardColor = isEven
-                                  ? const Color.fromRGBO(22, 121, 171, 1.0)
-                                  : const Color.fromARGB(255, 7, 40, 89);
-                              final Color textColor = isEven
-                                  ? const Color.fromARGB(255, 7, 40, 89)
-                                  : const Color.fromRGBO(22, 121, 171, 1.0);
+                      StreamBuilder<QuerySnapshot>(
+                        stream: getServiceHistory(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
 
-                              return Padding(
-                                padding: const EdgeInsets.all(20.0),
-                                child: Container(
-                                  height: 170,
-                                  width: 400,
-                                  decoration: BoxDecoration(
-                                    color: cardColor,
-                                    borderRadius: BorderRadius.circular(20),
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Text(
+                                'Error: ${snapshot.error}',
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            );
+                          }
+
+                          if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(50.0),
+                                child: Text(
+                                  'No service history found',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.grey,
                                   ),
-                                  child: Column(
-                                    children: [
-                                      const SizedBox(height: 20),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: const [
-                                          SizedBox(width: 20),
-                                          Icon(Icons.replay,
-                                              size: 45, color: Colors.white),
-                                        ],
+                                ),
+                              ),
+                            );
+                          }
+
+                          final docs = snapshot.data!.docs;
+
+                          return AnimationLimiter(
+                            child: Column(
+                              children: AnimationConfiguration.toStaggeredList(
+                                duration: const Duration(milliseconds: 1600),
+                                childAnimationBuilder: (widget) =>
+                                    SlideAnimation(
+                                  horizontalOffset: 100.0,
+                                  child: FadeInAnimation(child: widget),
+                                ),
+                                children: docs.map<Widget>((doc) {
+                                  final data =
+                                      doc.data() as Map<String, dynamic>;
+                                  final services = data['services']
+                                          as Map<String, dynamic>? ??
+                                      {};
+                                  final username =
+                                      data['username'] ?? 'Unknown User';
+                                  final completedAt =
+                                      data['completedAt'] as Timestamp?;
+                                  final totalWithTax =
+                                      calculateTotalWithTax(services);
+
+                                  final int index = docs.indexOf(doc);
+                                  final bool isEven = index % 2 == 0;
+                                  final Color cardColor = isEven
+                                      ? const Color.fromRGBO(22, 121, 171, 1.0)
+                                      : const Color.fromARGB(255, 7, 40, 89);
+                                  final Color textColor = isEven
+                                      ? const Color.fromARGB(255, 7, 40, 89)
+                                      : const Color.fromRGBO(22, 121, 171, 1.0);
+
+                                  return Padding(
+                                    padding: const EdgeInsets.all(20.0),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(20),
+                                      decoration: BoxDecoration(
+                                        color: cardColor,
+                                        borderRadius: BorderRadius.circular(20),
                                       ),
-                                      Column(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          const SizedBox(height: 10),
-                                          const Text(
-                                            '"Last Service"',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.history,
+                                                  size: 35,
+                                                  color: Colors.white),
+                                              const SizedBox(width: 15),
+                                              Expanded(
+                                                child: Text(
+                                                  username,
+                                                  style: const TextStyle(
+                                                    fontSize: 22,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(height: 6),
+                                          const SizedBox(height: 15),
                                           Text(
-                                            '"Details"',
+                                            'Services:',
                                             style: TextStyle(
-                                              fontSize: 20,
+                                              fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                               color: textColor,
                                             ),
                                           ),
+                                          const SizedBox(height: 8),
+                                          ...services.entries
+                                              .map<Widget>((entry) {
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                  bottom: 4),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      '• ${entry.key}',
+                                                      style: const TextStyle(
+                                                        fontSize: 14,
+                                                        color: Colors.white70,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    '\$${entry.value}',
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      color: Colors.white70,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }).toList(),
+                                          const SizedBox(height: 10),
+                                          const Divider(
+                                              color: Colors.white30,
+                                              thickness: 1),
+                                          const SizedBox(height: 5),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                'Total (incl. 16% tax):',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: textColor,
+                                                ),
+                                              ),
+                                              Text(
+                                                '${totalWithTax.toStringAsFixed(2)} JD',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: textColor,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 10),
+                                          Text(
+                                            'Completed: ${formatDate(completedAt)}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.white60,
+                                            ),
+                                          ),
                                         ],
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }),
-                          ),
-                        ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

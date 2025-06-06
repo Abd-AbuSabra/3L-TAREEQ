@@ -21,6 +21,40 @@ class users_profile extends StatefulWidget {
 
 class _users_profileState extends State<users_profile> {
   final Color customGreen = const Color.fromARGB(255, 192, 228, 194);
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Method to get latest service from history for current user
+  Stream<QuerySnapshot> getLatestService() {
+    User? currentUser = _auth.currentUser;
+    if (currentUser != null) {
+      return _firestore
+          .collection('history')
+          .where('userId', isEqualTo: currentUser.uid)
+          .limit(1) // Get only the most recent one
+          .snapshots();
+    }
+    return const Stream.empty();
+  }
+
+  // Method to calculate total price with tax
+  double calculateTotalWithTax(Map<String, dynamic> services) {
+    double total = 0;
+    services.forEach((key, value) {
+      if (value is num) {
+        total += value.toDouble();
+      }
+    });
+    // Add 16% tax
+    return total * 1.16;
+  }
+
+  // Method to format timestamp
+  String formatDate(Timestamp? timestamp) {
+    if (timestamp == null) return 'N/A';
+    DateTime date = timestamp.toDate();
+    return '${date.day}/${date.month}/${date.year} - ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
 
   // User data variables
   String userName = '"Name"';
@@ -160,57 +194,205 @@ class _users_profileState extends State<users_profile> {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(20.0),
-                        child: Container(
-                          height: 170,
-                          width: 400,
-                          decoration: BoxDecoration(
-                            color: const Color.fromRGBO(22, 121, 171, 1.0),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 20),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: const [
-                                  SizedBox(width: 20),
-                                  Icon(Icons.replay,
-                                      size: 45, color: Colors.white),
-                                ],
-                              ),
-                              Column(
-                                children: const [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        '"Last Service"',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
+                        child: StreamBuilder<QuerySnapshot>(
+                          stream: getLatestService(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return Container(
+                                height: 170,
+                                width: 400,
+                                decoration: BoxDecoration(
+                                  color:
+                                      const Color.fromRGBO(22, 121, 171, 1.0),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white),
+                                ),
+                              );
+                            }
+
+                            if (snapshot.hasError) {
+                              return Container(
+                                height: 170,
+                                width: 400,
+                                decoration: BoxDecoration(
+                                  color:
+                                      const Color.fromRGBO(22, 121, 171, 1.0),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    'Error loading service',
+                                    style: TextStyle(color: Colors.white),
                                   ),
-                                  SizedBox(height: 6),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        '"Details"',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 7, 40, 89),
-                                        ),
+                                ),
+                              );
+                            }
+
+                            if (!snapshot.hasData ||
+                                snapshot.data!.docs.isEmpty) {
+                              return Container(
+                                height: 170,
+                                width: 400,
+                                decoration: BoxDecoration(
+                                  color:
+                                      const Color.fromRGBO(22, 121, 171, 1.0),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Column(
+                                  children: [
+                                    const SizedBox(height: 20),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: const [
+                                        SizedBox(width: 20),
+                                        Icon(Icons.replay,
+                                            size: 45, color: Colors.white),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                    const Text(
+                                      'No Service History',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
-                                    ],
-                                  ),
-                                ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                      'Complete your first service',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Color.fromARGB(255, 7, 40, 89),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+
+                            // Get the latest service data
+                            final doc = snapshot.data!.docs.first;
+                            final data = doc.data() as Map<String, dynamic>;
+
+                            final name = data['username'] as String? ?? "";
+
+                            final services =
+                                data['services'] as Map<String, dynamic>? ?? {};
+                            final completedAt =
+                                data['completedAt'] as Timestamp?;
+                            final movedToHistoryAt =
+                                data['movedToHistoryAt'] as Timestamp?;
+                            final totalWithTax =
+                                calculateTotalWithTax(services);
+
+                            // Get the first service name (or total count)
+                            String serviceDisplay = services.isEmpty
+                                ? 'No services'
+                                : services.length == 1
+                                    ? services.keys.first
+                                    : '${services.length} services';
+
+                            return Container(
+                              height: 150,
+                              width: 400,
+                              decoration: BoxDecoration(
+                                color: const Color.fromRGBO(22, 121, 171, 1.0),
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                            ],
-                          ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Last Service',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 8,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          name,
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        Container(
+                                          margin: EdgeInsets.only(left: 1),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 4, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green,
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: const Text(
+                                            'COMPLETED',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      serviceDisplay,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Color.fromARGB(255, 7, 40, 89),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Total: ${totalWithTax.toStringAsFixed(2)} JD',
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        Text(
+                                          formatDate(
+                                              completedAt ?? movedToHistoryAt),
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color:
+                                                Color.fromARGB(255, 7, 40, 89),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 20),
