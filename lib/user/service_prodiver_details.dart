@@ -28,16 +28,18 @@ class ServiceProviderDetailsPage extends StatefulWidget {
   final double rating;
   final String mobile;
   final String providerId;
+  final String image;
   final Map<String, dynamic> services;
 
-  const ServiceProviderDetailsPage({
-    Key? key,
-    required this.name,
-    required this.rating,
-    required this.mobile,
-    required this.services,
-    required this.providerId,
-  }) : super(key: key);
+  const ServiceProviderDetailsPage(
+      {Key? key,
+      required this.name,
+      required this.rating,
+      required this.mobile,
+      required this.services,
+      required this.providerId,
+      required this.image})
+      : super(key: key);
 
   @override
   State<ServiceProviderDetailsPage> createState() =>
@@ -150,9 +152,13 @@ class _ServiceProviderDetailsPageState
                       padding: const EdgeInsets.all(12.0),
                       child: Row(
                         children: [
-                          const CircleAvatar(
-                            radius: 60,
-                            backgroundImage: AssetImage('assets/profile.jpg'),
+                          CircleAvatar(
+                            backgroundColor: Colors.grey.shade100,
+                            radius: 45,
+                            backgroundImage: widget.image != null
+                                ? NetworkImage(widget.image!)
+                                : const AssetImage('assets/profile.jpg')
+                                    as ImageProvider,
                           ),
                           const SizedBox(width: 20),
                           Expanded(

@@ -69,6 +69,7 @@ class _ServiceProviderPageState extends State<ServiceProviderPage> {
   Widget build(BuildContext context) {
     final name = widget.providerData['username'] ?? 'No name';
     final mobile = widget.providerData['mobile'] ?? '';
+    final image = widget.providerData['photoURL'] ?? '';
     final services = Map<String, dynamic>.from(
       widget.providerData['services'] ?? {},
     );
@@ -125,6 +126,7 @@ class _ServiceProviderPageState extends State<ServiceProviderPage> {
                               mobile: mobile,
                               services: services,
                               providerId: providerId,
+                              image: image,
                             ),
                           ),
                         );
@@ -147,9 +149,13 @@ class _ServiceProviderPageState extends State<ServiceProviderPage> {
                         ),
                         child: Row(
                           children: [
-                            const CircleAvatar(
-                              radius: 55,
-                              backgroundImage: AssetImage('assets/profile.jpg'),
+                            CircleAvatar(
+                              backgroundColor: Colors.grey.shade100,
+                              radius: 45,
+                              backgroundImage: image != null
+                                  ? NetworkImage(image!)
+                                  : const AssetImage('assets/profile.jpg')
+                                      as ImageProvider,
                             ),
                             const SizedBox(width: 20),
                             Expanded(

@@ -143,6 +143,7 @@ class _SearchForServiceState extends State<SearchForService>
           'providerEnd': false,
           'Booked': false,
           'userMobile': '',
+          'photoURL': '',
           'targetProviderId': provider['uid'],
           'services': selectedServiceTexts,
           'times': selectedTimeTexts,
@@ -183,6 +184,7 @@ class _SearchForServiceState extends State<SearchForService>
                   'mobile': accepted['mobile'] ?? '',
                   'services': accepted['services'] ?? {},
                   'rating': accepted['rating'],
+                  'photoURL': accepted['photoURL']
                 },
               ),
             ),

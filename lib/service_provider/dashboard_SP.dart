@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application_33/service_provider/invoice_SP.dart';
+import 'package:flutter_application_33/universal_components/menu_sp.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
@@ -141,6 +142,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         'userId': userId,
         'userEmail': userEmail,
         'userMobile': '',
+        'photoURL': profileImageUrl,
         'name': name,
         'userEnd': false,
         'providerEnd': false,
@@ -219,28 +221,30 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-              SizedBox(height: 60, width: 60, child: logo()),
-              const SizedBox(height: 20),
-              const Text("Profile",
-                  style: TextStyle(
-                      fontSize: 25,
-                      color: Color.fromARGB(255, 192, 228, 194),
-                      fontWeight: FontWeight.bold)),
-              const SizedBox(height: 20),
-              buildProfileCard(),
-              const SizedBox(height: 30),
-              buildInfoCards(),
-              const SizedBox(height: 30),
-              buildRequestsSection(),
-            ],
+    return Menu_SP(
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                SizedBox(height: 60, width: 60, child: logo()),
+                const SizedBox(height: 20),
+                const Text("Profile",
+                    style: TextStyle(
+                        fontSize: 25,
+                        color: Color.fromARGB(255, 192, 228, 194),
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 20),
+                buildProfileCard(),
+                const SizedBox(height: 30),
+                buildInfoCards(),
+                const SizedBox(height: 30),
+                buildRequestsSection(),
+              ],
+            ),
           ),
         ),
       ),

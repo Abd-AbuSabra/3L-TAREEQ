@@ -72,9 +72,45 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '3l tareeq',
       debugShowCheckedModeBanner: false,
-      home: FirebaseAuth.instance.currentUser != null
-          ? user_dashboard()
-          : Login(),
+      home: FutureBuilder<Widget>(
+        future: boot(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          } else if (snapshot.hasError) {
+            return const Scaffold(
+              body: Center(child: Text('Error occurred')),
+            );
+          } else {
+            return snapshot.data!;
+          }
+        },
+      ),
     );
   }
+}
+
+Future<Widget> boot() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return const Login();
+
+  final uid = user.uid;
+
+  final userDoc =
+      await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+  if (userDoc.exists) {
+    return const user_dashboard();
+  }
+
+  final providerDoc =
+      await FirebaseFirestore.instance.collection('providers').doc(uid).get();
+
+  if (providerDoc.exists) {
+    return const Dashboard_SP();
+  }
+
+  return const Login();
 }
