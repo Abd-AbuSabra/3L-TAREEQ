@@ -29,6 +29,13 @@ class _GeminiPageState extends State<GeminiPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: BackButton(
+          color: const Color.fromARGB(255, 144, 223, 170),
+        ),
+      ),
       backgroundColor: Colors.white,
       body: DashChat(
         messageOptions: const MessageOptions(

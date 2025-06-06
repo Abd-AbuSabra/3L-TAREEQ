@@ -32,7 +32,7 @@ class _invoice_SPState extends State<invoice_SP> {
   String providerLocation = "";
   bool isLoading = true;
   double taxAmount = 0;
-
+  double platformTax = 0.2;
   @override
   void initState() {
     super.initState();
@@ -91,9 +91,21 @@ class _invoice_SPState extends State<invoice_SP> {
             .get();
 
         if (querySnapshot.docs.isNotEmpty) {
-          await querySnapshot.docs.first.reference
-              .update({'providerEnd': true});
-          print('providerEnd updated successfully');
+          final docRef = querySnapshot.docs.first.reference;
+          final currentData = querySnapshot.docs.first.data();
+
+          // Get current earnings (if any) and add new earnings
+          double currentEarnings =
+              (currentData['providerEarnings'] ?? 0.0).toDouble();
+          double newEarnings = currentEarnings + getProviderEarnings();
+
+          await docRef.update({
+            'providerEnd': true,
+            'providerEarnings': newEarnings,
+          });
+
+          print('providerEnd and earnings updated successfully');
+          print('New total earnings: \$${newEarnings.toStringAsFixed(2)}');
 
           Navigator.push(
             context,
@@ -106,7 +118,7 @@ class _invoice_SPState extends State<invoice_SP> {
         print('No current provider found');
       }
     } catch (e) {
-      print('Error updating providerEnd: $e');
+      print('Error updating providerEnd and earnings: $e');
     }
   }
 
@@ -128,6 +140,11 @@ class _invoice_SPState extends State<invoice_SP> {
   // Add this method to calculate total
   double getTotal() {
     return getSubtotal() + taxAmount;
+  }
+
+  // Add this method to calculate provider earnings
+  double getProviderEarnings() {
+    return getTotal() - platformTax;
   }
 
   List<Widget> buildServiceItems() {
@@ -240,6 +257,90 @@ class _invoice_SPState extends State<invoice_SP> {
                 style: const TextStyle(
                   fontSize: 20,
                   color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // Add platform tax row
+    serviceWidgets.add(
+      Container(
+        margin: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 0),
+        decoration: const BoxDecoration(
+          border: Border(
+            top: BorderSide(color: Colors.white, width: 1),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(left: 50),
+                child: Text(
+                  'Platform Tax',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 50),
+              child: Text(
+                '-\$${platformTax.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // Add provider earnings row
+    serviceWidgets.add(
+      Container(
+        margin: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 0),
+        decoration: const BoxDecoration(
+          border: Border(
+            top: BorderSide(color: Colors.green, width: 2),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(left: 50),
+                child: Text(
+                  'Your Earnings',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 50),
+              child: Text(
+                '\$${getProviderEarnings().toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.green,
                   fontWeight: FontWeight.bold,
                 ),
               ),
