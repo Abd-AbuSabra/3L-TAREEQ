@@ -144,7 +144,8 @@ class _invoice_SPState extends State<invoice_SP> {
 
   // Add this method to calculate provider earnings
   double getProviderEarnings() {
-    return getTotal() - platformTax;
+    double yo = getTotal() * platformTax;
+    return getTotal() - yo;
   }
 
   List<Widget> buildServiceItems() {
@@ -295,10 +296,10 @@ class _invoice_SPState extends State<invoice_SP> {
             Padding(
               padding: const EdgeInsets.only(right: 50),
               child: Text(
-                '-\$${platformTax.toStringAsFixed(2)}',
+                '- 20%',
                 style: const TextStyle(
                   fontSize: 18,
-                  color: Colors.red,
+                  color: Color.fromARGB(255, 168, 14, 3),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -328,7 +329,7 @@ class _invoice_SPState extends State<invoice_SP> {
                   'Your Earnings',
                   style: TextStyle(
                     fontSize: 20,
-                    color: Colors.green,
+                    color: Colors.greenAccent,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

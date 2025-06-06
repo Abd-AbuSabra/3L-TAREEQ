@@ -170,6 +170,7 @@ class _Services_SPState extends State<Services_SP>
                                       {};
                                   final username =
                                       data['name'] ?? 'Unknown User';
+                                  final money = data['providerEarnings'] ?? 0;
                                   final completedAt =
                                       data['completedAt'] as Timestamp?;
                                   final totalWithTax =
@@ -266,7 +267,7 @@ class _Services_SPState extends State<Services_SP>
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(
-                                                'Total (incl. 16% tax):',
+                                                'Total (incl. 20% platform tax):',
                                                 style: TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
@@ -274,7 +275,7 @@ class _Services_SPState extends State<Services_SP>
                                                 ),
                                               ),
                                               Text(
-                                                '${totalWithTax.toStringAsFixed(2)} JD',
+                                                '${money.toStringAsFixed(2)} JD',
                                                 style: TextStyle(
                                                   fontSize: 18,
                                                   fontWeight: FontWeight.bold,
