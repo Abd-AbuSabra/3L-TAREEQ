@@ -227,7 +227,7 @@ class _SearchForServiceState extends State<SearchForService>
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-                  SizedBox(height: 80, width: 80, child: logo()),
+                  SizedBox(height: 100, width: 100, child: logo()),
                   const SizedBox(height: 50),
                   buildServiceSelection(),
                 ],
@@ -280,7 +280,7 @@ class _SearchForServiceState extends State<SearchForService>
             onPressed: confirmSelection,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(255, 192, 228, 194),
-              padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 15),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),

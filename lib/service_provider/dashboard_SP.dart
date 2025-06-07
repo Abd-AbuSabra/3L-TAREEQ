@@ -8,6 +8,7 @@ import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_application_33/service_provider/live_tracking_sp.dart';
+import 'package:flutter_application_33/service_provider/SP_profile.dart';
 
 class Dashboard_SP extends StatefulWidget {
   const Dashboard_SP({super.key});
@@ -24,11 +25,16 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
   String? profileImageUrl;
   final TextEditingController reviewController = TextEditingController();
 
+  // New variables for Firebase data
+  double totalEarnings = 0.0;
+  int totalServicesToday = 0;
+
   @override
   void initState() {
     super.initState();
     loadProviderData();
     startListeningForBookedStatus();
+    loadHistoryData(); // Load history data
   }
 
   Future<void> loadProviderData() async {
@@ -62,6 +68,59 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
       }
     } catch (e) {
       print("Failed to load provider data: $e");
+    }
+  }
+
+  // New method to load history data
+  Future<void> loadHistoryData() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final String currentProviderId = user.uid;
+
+      // Get all history documents for this provider
+      final historyQuery = await FirebaseFirestore.instance
+          .collection('history')
+          .where('providerId', isEqualTo: currentProviderId)
+          .get();
+
+      double earnings = 0.0;
+      int servicesToday = 0;
+
+      // Get today's date for comparison
+      final DateTime today = DateTime.now();
+      final DateTime startOfDay =
+          DateTime(today.year, today.month, today.day, 0, 0, 0);
+      final DateTime endOfDay =
+          DateTime(today.year, today.month, today.day, 23, 59, 59);
+
+      for (var doc in historyQuery.docs) {
+        final data = doc.data();
+
+        // Add to total earnings
+        if (data['providerEarnings'] != null) {
+          earnings += (data['providerEarnings'] as num).toDouble();
+        }
+
+        // Check if service was today (assuming there's a timestamp field)
+        if (data['movedToHistoryAt'] != null) {
+          final Timestamp timestamp = data['movedToHistoryAt'];
+          final DateTime serviceDate = timestamp.toDate();
+
+          if (serviceDate.isAfter(startOfDay) &&
+              serviceDate.isBefore(endOfDay)) {
+            servicesToday++;
+          }
+        }
+      }
+
+      setState(() {
+        totalEarnings = earnings;
+        totalServicesToday = servicesToday;
+      });
+    } catch (e) {
+      print("Failed to load history data: $e");
     }
   }
 
@@ -232,7 +291,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
                 const SizedBox(height: 20),
                 SizedBox(height: 60, width: 60, child: logo()),
                 const SizedBox(height: 20),
-                const Text("Profile",
+                const Text("Dashboard",
                     style: TextStyle(
                         fontSize: 25,
                         color: Color.fromARGB(255, 192, 228, 194),
@@ -252,64 +311,75 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
   }
 
   Widget buildProfileCard() {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Container(
-        height: 180,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5F7FA),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: Colors.grey.shade100,
-                radius: 45,
-                backgroundImage: profileImageUrl != null
-                    ? NetworkImage(profileImageUrl!)
-                    : const AssetImage('assets/profile.jpg') as ImageProvider,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      providerName,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 7, 65, 115),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    RatingBarIndicator(
-                      rating: providerRating,
-                      itemBuilder: (context, index) => Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                      ),
-                      itemCount: 5,
-                      itemSize: 20.0,
-                      direction: Axis.horizontal,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      joinedDateString,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 7, 65, 115),
-                      ),
-                    ),
-                  ],
+    return GestureDetector(
+      onTap: () {
+        // Navigate to another page - replace YourDestinationPage with your actual page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SP_profile(),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Container(
+          height: 180,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF5F7FA),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.grey.shade100,
+                  radius: 45,
+                  backgroundImage: profileImageUrl != null
+                      ? NetworkImage(profileImageUrl!)
+                      : const AssetImage('assets/profile.jpg') as ImageProvider,
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        providerName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 7, 65, 115),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      RatingBarIndicator(
+                        rating: providerRating,
+                        itemBuilder: (context, index) => Icon(
+                          Icons.star,
+                          color: Colors.amber,
+                        ),
+                        itemCount: 5,
+                        itemSize: 20.0,
+                        direction: Axis.horizontal,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        joinedDateString,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 7, 65, 115),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -324,12 +394,14 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         children: [
           _infoCard(
               title: 'Money made',
-              value: '0\$',
+              value:
+                  '\$${totalEarnings.toStringAsFixed(2)}', // Updated to show actual earnings
               color: const Color.fromARGB(255, 192, 228, 194)),
           const SizedBox(height: 10),
           _infoCard(
               title: 'No. services today',
-              value: '0',
+              value:
+                  '$totalServicesToday', // Updated to show actual services count
               color: const Color(0xFF083B6F)),
         ],
       ),

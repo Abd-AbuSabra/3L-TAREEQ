@@ -1,6 +1,7 @@
 import 'package:circular_menu/circular_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_application_33/pop_ups/logout_popup.dart';
 
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_application_33/user/dashboard_user.dart';
@@ -24,7 +25,7 @@ class Menu extends StatelessWidget {
       toggleButtonBoxShadow: [
         BoxShadow(
           color: Color.fromARGB(255, 7, 65, 115).withOpacity(0.3),
-          blurRadius: 8,
+          blurRadius: 15,
           offset: Offset(0, 4),
         ),
       ],
@@ -101,11 +102,7 @@ class Menu extends StatelessWidget {
           iconColor: Colors.white,
           onTap: () async {
             await FirebaseAuth.instance.signOut();
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const Login()),
-              (route) => false,
-            );
+            showLogoutDialog(context);
           },
         ),
       ],

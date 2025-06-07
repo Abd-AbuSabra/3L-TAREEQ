@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_33/service_provider/SP_profile.dart';
 import 'package:flutter_application_33/service_provider/dashboard_SP.dart';
+import 'package:flutter_application_33/universal_components/menu_sp.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:animated_background/animated_background.dart';
@@ -68,7 +69,7 @@ class _Services_SPState extends State<Services_SP>
 
   @override
   Widget build(BuildContext context) {
-    return Menu(
+    return Menu_SP(
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.transparent,

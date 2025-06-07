@@ -1,6 +1,15 @@
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_application_33/Gemini/gemini_page.dart';
+import 'package:flutter_application_33/universal_components/project_logo.dart';
+import 'package:lottie/lottie.dart';
+import 'package:flutter_application_33/user/select_service_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class GeminiPage extends StatefulWidget {
   const GeminiPage({super.key});
@@ -24,7 +33,44 @@ class _GeminiPageState extends State<GeminiPage> {
     profileImage: 'lib/images/logo2.png',
   );
 
+  @override
+  void initState() {
+    super.initState();
+    _listenForAcceptedProvider();
+  }
+
   List<ChatMessage> _messages = [];
+  final _auth = FirebaseAuth.instance;
+
+  StreamSubscription<QuerySnapshot>? _subscription;
+
+  void _listenForAcceptedProvider() {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    _subscription = FirebaseFirestore.instance
+        .collection('acceptedProviders')
+        .where('userId', isEqualTo: user.uid)
+        .where('isAccepted', isEqualTo: true)
+        .limit(1)
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        final providerData =
+            snapshot.docs.first.data() as Map<String, dynamic>?;
+        if (providerData != null && mounted) {
+          _subscription?.cancel(); // prevent multiple triggers
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ServiceProviderPage(providerData: providerData),
+            ),
+          );
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

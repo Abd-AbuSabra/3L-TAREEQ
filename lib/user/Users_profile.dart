@@ -11,6 +11,7 @@ import 'package:circular_menu/circular_menu.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_application_33/pop_ups/logout_popup.dart';
 
 class users_profile extends StatefulWidget {
   const users_profile({super.key});
@@ -105,6 +106,13 @@ class _users_profileState extends State<users_profile> {
   Widget build(BuildContext context) {
     return Menu(
       child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: BackButton(
+            color: const Color.fromARGB(255, 144, 223, 170),
+          ),
+        ),
         backgroundColor: Colors.white,
         body: Column(
           children: [
@@ -115,13 +123,13 @@ class _users_profileState extends State<users_profile> {
                   physics: const BouncingScrollPhysics(),
                   child: Column(
                     children: [
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 10),
                       SizedBox(
                         height: 60,
                         width: 60,
                         child: logo(),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 18),
                       Text(
                         "User's profile",
                         style: TextStyle(
@@ -193,7 +201,8 @@ class _users_profileState extends State<users_profile> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(20.0),
+                        padding: const EdgeInsets.only(
+                            top: 5.0, left: 20, right: 20, bottom: 10),
                         child: StreamBuilder<QuerySnapshot>(
                           stream: getLatestService(),
                           builder: (context, snapshot) {
@@ -298,97 +307,109 @@ class _users_profileState extends State<users_profile> {
                                     ? services.keys.first
                                     : '${services.length} services';
 
-                            return Container(
-                              height: 150,
-                              width: 400,
-                              decoration: BoxDecoration(
-                                color: const Color.fromRGBO(22, 121, 171, 1.0),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Last Service',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      height: 8,
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          name,
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
+                            return GestureDetector(
+                              onTap: () {
+                                // Navigate to another page - replace YourDestinationPage with your actual page
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Services(),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                height: 150,
+                                width: 400,
+                                decoration: BoxDecoration(
+                                  color: customGreen,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Last Service',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
                                         ),
-                                        Container(
-                                          margin: EdgeInsets.only(left: 1),
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 4, vertical: 3),
-                                          decoration: BoxDecoration(
-                                            color: Colors.green,
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          child: const Text(
-                                            'COMPLETED',
+                                      ),
+                                      SizedBox(
+                                        height: 8,
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            name,
                                             style: TextStyle(
-                                              fontSize: 10,
+                                              fontSize: 20,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.white,
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      serviceDisplay,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Color.fromARGB(255, 7, 40, 89),
-                                        fontWeight: FontWeight.w600,
+                                          Container(
+                                            margin: EdgeInsets.only(left: 1),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 4, vertical: 3),
+                                            decoration: BoxDecoration(
+                                              color: Colors.green,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: const Text(
+                                              'COMPLETED',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          'Total: ${totalWithTax.toStringAsFixed(2)} JD',
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        serviceDisplay,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Color.fromARGB(255, 7, 40, 89),
+                                          fontWeight: FontWeight.w600,
                                         ),
-                                        Text(
-                                          formatDate(
-                                              completedAt ?? movedToHistoryAt),
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            color:
-                                                Color.fromARGB(255, 7, 40, 89),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Total: ${totalWithTax.toStringAsFixed(2)} JD',
+                                            style: const TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                          Text(
+                                            formatDate(completedAt ??
+                                                movedToHistoryAt),
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Color.fromARGB(
+                                                  255, 7, 40, 89),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             );
@@ -506,12 +527,7 @@ class _users_profileState extends State<users_profile> {
                         TextButton.icon(
                           onPressed: () async {
                             await FirebaseAuth.instance.signOut();
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const Login()),
-                              (Route<dynamic> route) => false,
-                            );
+                            showLogoutDialog(context);
                           },
                           icon: const Icon(Icons.logout, color: Colors.white),
                           label: const Text(

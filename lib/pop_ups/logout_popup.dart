@@ -1,31 +1,8 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter_application_33/user/login.dart';
 
-class Logout_DialogScreen extends StatefulWidget {
-  const Logout_DialogScreen({super.key});
-
-  @override
-  State<Logout_DialogScreen> createState() => _Logout_DialogScreenState();
-}
-
-class _Logout_DialogScreenState extends State<Logout_DialogScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showCancelDialog(context);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Colors.white,
-    );
-  }
-}
-
-void showCancelDialog(BuildContext context) {
+// Remove the StatefulWidget and just use this function
+void showLogoutDialog(BuildContext context) {
   showDialog(
     context: context,
     barrierDismissible: false,
@@ -35,7 +12,6 @@ void showCancelDialog(BuildContext context) {
           borderRadius: BorderRadius.circular(18),
         ),
         child: Container(
-        
           padding: const EdgeInsets.all(20),
           width: 300,
           height: 180,
@@ -54,34 +30,44 @@ void showCancelDialog(BuildContext context) {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-               
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.black,
                       elevation: 2,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     onPressed: () {
-                      Navigator.of(context).pop(); 
+                      Navigator.of(context)
+                          .pop(); // This will close the dialog and stay on the current page
                     },
-                    child: const Text('No',style: TextStyle(  color: Color.fromARGB(255, 73, 73, 73),),),
+                    child: const Text(
+                      'No',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 73, 73, 73),
+                      ),
+                    ),
                   ),
-                  // Cancel Button
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     onPressed: () {
-                      Navigator.of(context).pop(); 
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const Login()),
+                        (route) => false,
+                      );
                     },
                     child: const Text('Yes'),
                   ),

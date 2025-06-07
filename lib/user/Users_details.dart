@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_33/Gemini/gemini_page.dart';
+import 'package:flutter_application_33/universal_components/Menu.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:circular_menu/circular_menu.dart';
 import 'package:flutter_application_33/user/dashboard_user.dart';
@@ -27,6 +28,8 @@ class _user_detailsState extends State<user_details> {
   String carBrand = '';
   String userId = '';
   String memberSince = '';
+  String formattedDate = "date";
+
   Map<String, dynamic>? userData;
 
   // Controllers for editing
@@ -70,6 +73,10 @@ class _user_detailsState extends State<user_details> {
         userEmail = userData!['email'] ?? '';
         carBrand = userData!['carBrandAndType'] ?? '';
         userId = userData!['uid'] ?? '';
+        Timestamp createdAt = userData!['createdAt'];
+        DateTime createdAtDate = createdAt.toDate();
+        formattedDate =
+            "Joined: ${DateFormat('MMMM yyyy').format(createdAtDate)}"; //
 
         // Initialize controllers with current data
         _usernameController.text = userName == '"Name"' ? '' : userName;
@@ -340,237 +347,192 @@ class _user_detailsState extends State<user_details> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  AppBar(
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    leading: BackButton(
-                      color: customGreen,
+    return Menu(
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: BackButton(
+            color: const Color.fromARGB(255, 144, 223, 170),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        body: Stack(
+          children: [
+            SafeArea(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 60,
+                      width: 60,
+                      child: logo(),
                     ),
-                  ),
-                  SizedBox(
-                    height: 60,
-                    width: 60,
-                    child: logo(),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "User's Personal Details",
-                    style: TextStyle(
-                      fontSize: 25,
-                      color: Color.fromARGB(255, 192, 228, 194),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Container(
-                      height: 180,
-                      width: 400,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F7FA),
-                        borderRadius: BorderRadius.circular(20),
+                    const SizedBox(height: 20),
+                    const Text(
+                      "User's Personal Details",
+                      style: TextStyle(
+                        fontSize: 25,
+                        color: Color.fromARGB(255, 192, 228, 194),
+                        fontWeight: FontWeight.bold,
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Row(
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Container(
+                        height: 180,
+                        width: 400,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F7FA),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 45,
+                                backgroundColor: avatarColor,
+                                child: Text(
+                                  getInitials(userName),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 23,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const SizedBox(height: 45),
+                                  Column(
+                                    children: [
+                                      const SizedBox(width: 30),
+                                      Text(
+                                        userName,
+                                        style: const TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          color:
+                                              Color.fromARGB(255, 7, 65, 115),
+                                        ),
+                                      ),
+                                      Text(
+                                        formattedDate,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color:
+                                              Color.fromARGB(255, 7, 65, 115),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(50),
+                        topRight: Radius.circular(50),
+                      ),
+                      child: Container(
+                        width: double.infinity,
+                        color: customGreen,
+                        child: Column(
                           children: [
-                            CircleAvatar(
-                              radius: 45,
-                              backgroundColor: avatarColor,
-                              child: Text(
-                                getInitials(userName),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 23,
-                                  fontWeight: FontWeight.bold,
+                            const SizedBox(height: 20),
+                            const Padding(
+                              padding: EdgeInsets.all(20.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  SizedBox(height: 10),
+                                  Padding(
+                                    padding: EdgeInsets.all(10.0),
+                                    child: Text(
+                                      "Details",
+                                      style: TextStyle(
+                                        fontSize: 25,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+
+                            // Editable fields
+                            _buildEditableDetailCard(
+                                "Username", userName, _usernameController),
+                            _buildEditableDetailCard(
+                                "Email", userEmail, _emailController),
+                            _buildEditableDetailCard(
+                                "Car Brand", carBrand, _carBrandController),
+
+                            // Non-editable fields
+
+                            const SizedBox(height: 40),
+
+                            // Save Changes Button
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 25.0),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _isLoading ? null : _saveChanges,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 15),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
+                                    elevation: 3,
+                                  ),
+                                  child: _isLoading
+                                      ? SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: customGreen,
+                                          ),
+                                        )
+                                      : Text(
+                                          "Save Changes",
+                                          style: TextStyle(
+                                            color: customGreen,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                          ),
+                                        ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const SizedBox(height: 40),
-                                Row(
-                                  children: [
-                                    const SizedBox(width: 30),
-                                    Text(
-                                      userName,
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color.fromARGB(255, 7, 65, 115),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                              ],
-                            ),
+
+                            const SizedBox(height: 300),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(50),
-                      topRight: Radius.circular(50),
-                    ),
-                    child: Container(
-                      width: double.infinity,
-                      color: customGreen,
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 20),
-                          const Padding(
-                            padding: EdgeInsets.all(20.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                SizedBox(height: 10),
-                                Padding(
-                                  padding: EdgeInsets.all(10.0),
-                                  child: Text(
-                                    "Details",
-                                    style: TextStyle(
-                                      fontSize: 25,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-
-                          // Editable fields
-                          _buildEditableDetailCard(
-                              "Username", userName, _usernameController),
-                          _buildEditableDetailCard(
-                              "Email", userEmail, _emailController),
-                          _buildEditableDetailCard(
-                              "Car Brand", carBrand, _carBrandController),
-
-                          // Non-editable fields
-
-                          _buildNonEditableDetailCard(
-                              "Member Since", memberSince),
-
-                          const SizedBox(height: 40),
-
-                          // Save Changes Button
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 25.0),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _isLoading ? null : _saveChanges,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 15),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                  elevation: 3,
-                                ),
-                                child: _isLoading
-                                    ? SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: customGreen,
-                                        ),
-                                      )
-                                    : Text(
-                                        "Save Changes",
-                                        style: TextStyle(
-                                          color: customGreen,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 300),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          CircularMenu(
-            alignment: Alignment.bottomRight,
-            toggleButtonColor: customGreen,
-            items: [
-              CircularMenuItem(
-                icon: Icons.home,
-                color: customGreen,
-                iconColor: Colors.white,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const user_dashboard()),
-                  );
-                },
-              ),
-              CircularMenuItem(
-                icon: Icons.person,
-                color: customGreen,
-                iconColor: Colors.white,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const users_profile()),
-                  );
-                },
-              ),
-              CircularMenuItem(
-                icon: Icons.chat,
-                color: customGreen,
-                iconColor: Colors.white,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const GeminiPage()),
-                  );
-                },
-              ),
-              CircularMenuItem(
-                icon: Icons.logout,
-                color: Colors.red,
-                iconColor: Colors.white,
-                onTap: () async {
-                  await FirebaseAuth.instance.signOut();
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Login()),
-                    (Route<dynamic> route) => false,
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

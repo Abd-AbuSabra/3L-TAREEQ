@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_application_33/universal_components/menu_sp.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
@@ -25,6 +26,8 @@ class _SP_detailsState extends State<SP_details> {
   String providerEmail = '';
   String carBrand = '';
   String providerId = '';
+  double providerRating = 0;
+
   String memberSince = '';
   Map<String, dynamic>? providerData;
   String? profileImageUrl;
@@ -71,6 +74,8 @@ class _SP_detailsState extends State<SP_details> {
         providerName = providerData!['username'] ?? '"Name"';
         providerEmail = providerData!['email'] ?? '';
         carBrand = providerData!['carBrandAndType'] ?? '';
+        providerRating = (providerData!['rating'] ?? 0).toDouble();
+
         providerId = providerData!['uid'] ?? '';
         rating = (providerData!['rating'] ?? 0).toDouble();
         services = Map<String, dynamic>.from(providerData!['services'] ?? {});
@@ -80,7 +85,7 @@ class _SP_detailsState extends State<SP_details> {
         profileImageUrl = providerData!['profileImageUrl'];
         if (providerData!['createdAt'] != null) {
           DateTime dateTime = providerData!['createdAt'].toDate();
-          memberSince = DateFormat('MMMM yyyy').format(dateTime);
+          memberSince = "Joined: ${DateFormat('MMMM yyyy').format(dateTime)}";
         }
       });
     }
@@ -441,100 +446,115 @@ class _SP_detailsState extends State<SP_details> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  AppBar(
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    leading: BackButton(color: customGreen),
-                  ),
-                  SizedBox(height: 60, width: 60, child: logo()),
-                  const SizedBox(height: 20),
-                  const Text("Provider's Profile",
-                      style: TextStyle(
-                          fontSize: 25,
-                          color: Color.fromARGB(255, 192, 228, 194),
-                          fontWeight: FontWeight.bold)),
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Container(
-                      height: 180,
-                      width: 400,
-                      decoration: BoxDecoration(
-                          color: const Color(0xFFF5F7FA),
-                          borderRadius: BorderRadius.circular(20)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Row(
-                          children: [
-                            _buildProfileImage(), // Use the new profile image widget
-                            const SizedBox(width: 10),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const SizedBox(height: 40),
-                                Column(
-                                  children: [
-                                    const SizedBox(width: 30),
-                                    Text(providerName,
+    return Menu_SP(
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: BackButton(
+            color: const Color.fromARGB(255, 144, 223, 170),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        body: Stack(
+          children: [
+            SafeArea(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    SizedBox(height: 60, width: 60, child: logo()),
+                    const SizedBox(height: 20),
+                    const Text("Provider's Profile",
+                        style: TextStyle(
+                            fontSize: 25,
+                            color: Color.fromARGB(255, 192, 228, 194),
+                            fontWeight: FontWeight.bold)),
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Container(
+                        height: 180,
+                        width: 400,
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFF5F7FA),
+                            borderRadius: BorderRadius.circular(20)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Row(
+                            children: [
+                              _buildProfileImage(), // Use the new profile image widget
+                              const SizedBox(width: 10),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const SizedBox(height: 40),
+                                  Column(
+                                    children: [
+                                      Text(
+                                        providerName,
                                         style: const TextStyle(
-                                            color:
-                                                Color.fromARGB(255, 7, 65, 115),
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 20)),
-                                  ],
-                                ),
-                                const SizedBox(height: 13),
-                                RatingBarIndicator(
-                                  rating: rating,
-                                  itemBuilder: (context, _) => const Icon(
-                                    Icons.star,
-                                    color: Colors.amber,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color:
+                                              Color.fromARGB(255, 7, 65, 115),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      RatingBarIndicator(
+                                        rating: providerRating,
+                                        itemBuilder: (context, index) => Icon(
+                                          Icons.star,
+                                          color: Colors.amber,
+                                        ),
+                                        itemCount: 5,
+                                        itemSize: 20.0,
+                                        direction: Axis.horizontal,
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        memberSince,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color:
+                                              Color.fromARGB(255, 7, 65, 115),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  itemCount: 5,
-                                  itemSize: 18,
-                                  direction: Axis.horizontal,
-                                ),
-                              ],
-                            )
-                          ],
+                                ],
+                              )
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  _buildEditableDetailCard(
-                      "Username", providerName, _usernameController),
-                  _buildEditableDetailCard(
-                      "Email", providerEmail, _emailController),
-                  _buildEditableDetailCard(
-                      "Car Brand", carBrand, _carBrandController),
-                  _buildNonEditableDetailCard("Member Since", memberSince),
-                  const SizedBox(height: 20),
-                  if (_isLoading)
-                    const CircularProgressIndicator()
-                  else
-                    ElevatedButton(
-                      onPressed: _saveChanges,
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: customGreen,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 12)),
-                      child: const Text("Save Changes",
-                          style: TextStyle(color: Colors.white)),
-                    ),
-                  const SizedBox(height: 30),
-                ],
+                    _buildEditableDetailCard(
+                        "Username", providerName, _usernameController),
+                    _buildEditableDetailCard(
+                        "Email", providerEmail, _emailController),
+                    _buildEditableDetailCard(
+                        "Car Brand", carBrand, _carBrandController),
+                    const SizedBox(height: 20),
+                    if (_isLoading)
+                      const CircularProgressIndicator()
+                    else
+                      ElevatedButton(
+                        onPressed: _saveChanges,
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: customGreen,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 12)),
+                        child: const Text("Save Changes",
+                            style: TextStyle(color: Colors.white)),
+                      ),
+                    const SizedBox(height: 30),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

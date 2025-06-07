@@ -11,6 +11,7 @@ import 'package:flutter_application_33/service_provider/SP_details.dart';
 import 'package:flutter_application_33/service_provider/SP_profile.dart';
 import 'package:flutter_application_33/service_provider/dashboard_SP.dart';
 import 'package:flutter_application_33/service_provider/Pricing.dart';
+import 'package:flutter_application_33/pop_ups/logout_popup.dart';
 
 import 'package:flutter_application_33/service_provider/upload_profile_photo.dart';
 import 'package:flutter_application_33/user/Payment.dart';
@@ -109,11 +110,7 @@ class Menu_SP extends StatelessWidget {
           iconColor: Colors.white,
           onTap: () async {
             await FirebaseAuth.instance.signOut();
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const Login()),
-              (route) => false,
-            );
+            showLogoutDialog(context);
           },
         ),
       ],
