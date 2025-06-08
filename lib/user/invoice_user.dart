@@ -15,10 +15,10 @@ class Invoice_user extends StatefulWidget {
 
 class _Invoice_userState extends State<Invoice_user> {
   String? selectedPayment;
-  Map<String, dynamic>? providerData;
   Map<String, double> servicesWithPrices = {};
   String providerName = "";
   String providerId = "";
+  String photo = "";
   String providerLocation = "";
   bool isLoading = true;
   String? errorMessage;
@@ -65,6 +65,7 @@ class _Invoice_userState extends State<Invoice_user> {
             providerId = acceptedData['providerId'] ?? 'Unknown Provider';
             providerLocation =
                 acceptedData['providerLocation'] ?? 'Location not available';
+            photo = acceptedData['photoURL'];
 
             // Extract services with prices safely
             if (acceptedData['services'] != null) {
@@ -369,13 +370,10 @@ class _Invoice_userState extends State<Invoice_user> {
                                     backgroundColor: const Color.fromARGB(
                                         255, 219, 218, 218),
                                     radius: 45,
-                                    backgroundImage:
-                                        providerData!['photoURL'] != null
-                                            ? NetworkImage(
-                                                providerData!['photoURL'])
-                                            : const AssetImage(
-                                                    'assets/profile.jpg')
-                                                as ImageProvider,
+                                    backgroundImage: photo != null
+                                        ? NetworkImage(photo)
+                                        : const AssetImage('assets/profile.jpg')
+                                            as ImageProvider,
                                   ),
                                   const SizedBox(width: 10),
                                   Expanded(

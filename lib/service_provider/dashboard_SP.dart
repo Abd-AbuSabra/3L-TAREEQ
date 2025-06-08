@@ -99,17 +99,17 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
 
       for (var doc in historyQuery.docs) {
         final data = doc.data();
-
+        final Timestamp timestamp = data['movedToHistoryAt'];
+        final DateTime serviceDate = timestamp.toDate();
         // Add to total earnings
-        if (data['providerEarnings'] != null) {
+        if (data['providerEarnings'] != null &&
+            ((serviceDate.isAfter(startOfDay) &&
+                serviceDate.isBefore(endOfDay)))) {
           earnings += (data['providerEarnings'] as num).toDouble();
         }
 
         // Check if service was today (assuming there's a timestamp field)
         if (data['movedToHistoryAt'] != null) {
-          final Timestamp timestamp = data['movedToHistoryAt'];
-          final DateTime serviceDate = timestamp.toDate();
-
           if (serviceDate.isAfter(startOfDay) &&
               serviceDate.isBefore(endOfDay)) {
             servicesToday++;
@@ -396,7 +396,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _infoCard(
-              title: 'Money made',
+              title: 'Money made today',
               value:
                   '\$${totalEarnings.toStringAsFixed(2)}', // Updated to show actual earnings
               color: const Color.fromARGB(255, 192, 228, 194)),
