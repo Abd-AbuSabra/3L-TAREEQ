@@ -40,16 +40,19 @@ class _RegisterState extends State<Register> with TickerProviderStateMixin {
 
     try {
       await authService.signUpWithEmailAndPassword(
-          emailController.text.trim(), passwordController.text.trim(),
-          username: usernameController.text.trim(),
-          carBrandAndType: carBrandController.text.trim());
+        emailController.text.trim(),
+        passwordController.text.trim(),
+        username: usernameController.text.trim(),
+        carBrandAndType: carBrandController.text.trim(),
+        userMobile: PhoneController.text.trim(),
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Registration Successful!")),
       );
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => PN()),
+        MaterialPageRoute(builder: (context) => user_dashboard()),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

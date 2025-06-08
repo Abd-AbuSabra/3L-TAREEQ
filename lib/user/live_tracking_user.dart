@@ -7,7 +7,7 @@ import 'package:flutter_application_33/service_provider/dashboard_SP.dart';
 import 'package:flutter_application_33/service_provider/SP_profile.dart';
 import 'package:flutter_application_33/service_provider/upload_profile_photo.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-
+import 'package:flutter/services.dart';
 import 'package:flutter_application_33/components/auth_service.dart';
 import 'package:flutter_application_33/components/my_text_field.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
@@ -382,11 +382,21 @@ class _live_track_userState extends State<live_track_user> {
                   const SizedBox(width: 16),
                   Card(
                     child: IconButton(
-                      onPressed: () {
-                        // Handle call functionality
-                        // You might want to use url_launcher to make a phone call
-                        // or navigate to a calling screen
-                        print('Call: ${providerData!['phoneNumber']}');
+                      onPressed: () async {
+                        try {
+                          await Clipboard.setData(ClipboardData(
+                              text: providerData!['providerMobile']));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content:
+                                    Text('Phone number copied successfully!')),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('Failed to copy Phone number')),
+                          );
+                        }
                       },
                       icon: const Icon(
                         Icons.call,

@@ -40,6 +40,7 @@ class _SearchForServiceState extends State<SearchForService>
   };
 
   String name = '';
+  String usernum = '';
   Map<String, dynamic>? userData;
 
   @override
@@ -73,6 +74,7 @@ class _SearchForServiceState extends State<SearchForService>
 
           setState(() {
             name = userData!['username'] ?? '"Name"';
+            usernum = userData!['userMobile'];
             Timestamp createdAt = userData!['createdAt'];
             DateTime createdAtDate = createdAt.toDate();
           });

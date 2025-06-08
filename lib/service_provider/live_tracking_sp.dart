@@ -7,7 +7,7 @@ import 'package:flutter_application_33/service_provider/SP_profile.dart';
 import 'package:flutter_application_33/service_provider/dashboard_SP.dart';
 import 'package:flutter_application_33/service_provider/invoice_SP.dart';
 import 'package:flutter_application_33/service_provider/chat_with_user.dart';
-
+import 'package:flutter/services.dart';
 import 'package:flutter_application_33/Gemini/gemini_page.dart';
 import 'package:flutter_application_33/user/login.dart';
 
@@ -231,60 +231,6 @@ class _live_track_SPState extends State<live_track_SP> {
               ),
             ),
           ),
-          CircularMenu(
-            alignment: Alignment.bottomRight,
-            toggleButtonColor: customGreen,
-            toggleButtonIconColor: Colors.white,
-            items: [
-              CircularMenuItem(
-                icon: Icons.home,
-                color: customGreen,
-                iconColor: Colors.white,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const Dashboard_SP()),
-                  );
-                },
-              ),
-              CircularMenuItem(
-                icon: Icons.person,
-                color: customGreen,
-                iconColor: Colors.white,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SP_profile()),
-                  );
-                },
-              ),
-              CircularMenuItem(
-                icon: Icons.chat,
-                color: customGreen,
-                iconColor: Colors.white,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const GeminiPage()),
-                  );
-                },
-              ),
-              CircularMenuItem(
-                icon: Icons.logout,
-                color: Colors.red,
-                iconColor: Colors.white,
-                onTap: () async {
-                  await FirebaseAuth.instance.signOut();
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Login()),
-                    (route) => false,
-                  );
-                },
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -409,16 +355,17 @@ class _live_track_SPState extends State<live_track_SP> {
               Card(
                 color: Colors.white,
                 child: IconButton(
-                  onPressed: () {
-                    // Handle call functionality
-                    String phoneNumber = userData!['userMobile'] ?? '';
-                    if (phoneNumber.isNotEmpty) {
-                      print('Call: $phoneNumber');
-                      // You can use url_launcher here to make actual calls
-                    } else {
+                  onPressed: () async {
+                    try {
+                      await Clipboard.setData(
+                          ClipboardData(text: userData!['userMobile']));
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('No phone number available')),
+                        SnackBar(
+                            content: Text('Phone number copied successfully!')),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to copy Phone number')),
                       );
                     }
                   },

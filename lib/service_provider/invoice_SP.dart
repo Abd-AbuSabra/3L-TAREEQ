@@ -453,60 +453,6 @@ class _invoice_SPState extends State<invoice_SP> {
               ),
             ),
           ),
-          CircularMenu(
-            alignment: Alignment.bottomRight,
-            toggleButtonColor: customGreen,
-            toggleButtonIconColor: Colors.white,
-            items: [
-              CircularMenuItem(
-                icon: Icons.home,
-                color: customGreen,
-                iconColor: Colors.white,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const Dashboard_SP()),
-                  );
-                },
-              ),
-              CircularMenuItem(
-                icon: Icons.person,
-                color: customGreen,
-                iconColor: Colors.white,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SP_profile()),
-                  );
-                },
-              ),
-              CircularMenuItem(
-                icon: Icons.chat,
-                color: customGreen,
-                iconColor: Colors.white,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const GeminiPage()),
-                  );
-                },
-              ),
-              CircularMenuItem(
-                icon: Icons.logout,
-                color: Colors.red,
-                iconColor: Colors.white,
-                onTap: () async {
-                  await FirebaseAuth.instance.signOut();
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Login()),
-                    (route) => false,
-                  );
-                },
-              ),
-            ],
-          ),
         ],
       ),
     );

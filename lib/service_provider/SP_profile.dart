@@ -346,8 +346,8 @@ class _SP_profileState extends State<SP_profile> {
                                     height: 150,
                                     width: 400,
                                     decoration: BoxDecoration(
-                                      color: const Color.fromRGBO(
-                                          22, 121, 171, 1.0),
+                                      color:
+                                          const Color.fromARGB(255, 7, 40, 89),
                                       borderRadius: BorderRadius.circular(20),
                                       // Add a subtle shadow to indicate it's pressable
                                       boxShadow: [
@@ -415,8 +415,8 @@ class _SP_profileState extends State<SP_profile> {
                                             serviceDisplay,
                                             style: const TextStyle(
                                               fontSize: 14,
-                                              color: Color.fromARGB(
-                                                  255, 7, 40, 89),
+                                              color: const Color.fromRGBO(
+                                                  22, 121, 171, 1.0),
                                               fontWeight: FontWeight.w600,
                                             ),
                                             maxLines: 1,
@@ -439,10 +439,9 @@ class _SP_profileState extends State<SP_profile> {
                                                 formatDate(completedAt ??
                                                     movedToHistoryAt),
                                                 style: const TextStyle(
-                                                  fontSize: 13,
-                                                  color: Color.fromARGB(
-                                                      255, 7, 40, 89),
-                                                ),
+                                                    fontSize: 13,
+                                                    color: const Color.fromRGBO(
+                                                        22, 121, 171, 1.0)),
                                               ),
                                             ],
                                           ),

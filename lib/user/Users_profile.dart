@@ -321,7 +321,8 @@ class _users_profileState extends State<users_profile> {
                                 height: 150,
                                 width: 400,
                                 decoration: BoxDecoration(
-                                  color: customGreen,
+                                  color:
+                                      const Color.fromRGBO(22, 121, 171, 1.0),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Padding(

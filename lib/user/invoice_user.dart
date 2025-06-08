@@ -365,10 +365,17 @@ class _Invoice_userState extends State<Invoice_user> {
                               padding: const EdgeInsets.all(12.0),
                               child: Row(
                                 children: [
-                                  const CircleAvatar(
-                                    radius: 60,
+                                  CircleAvatar(
+                                    backgroundColor: const Color.fromARGB(
+                                        255, 219, 218, 218),
+                                    radius: 45,
                                     backgroundImage:
-                                        AssetImage('assets/profile.jpg'),
+                                        providerData!['photoURL'] != null
+                                            ? NetworkImage(
+                                                providerData!['photoURL'])
+                                            : const AssetImage(
+                                                    'assets/profile.jpg')
+                                                as ImageProvider,
                                   ),
                                   const SizedBox(width: 10),
                                   Expanded(

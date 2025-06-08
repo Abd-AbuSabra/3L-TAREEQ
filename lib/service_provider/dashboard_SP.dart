@@ -20,6 +20,7 @@ class Dashboard_SP extends StatefulWidget {
 class _Dashboard_SPState extends State<Dashboard_SP> {
   String providerName = 'Provider';
   String providerId = '';
+  String providerNum = '';
   double providerRating = 0;
   String joinedDateString = '';
   String? profileImageUrl;
@@ -53,6 +54,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
           providerName = data['username'] ?? 'Unnamed Provider';
           providerRating = (data['rating'] ?? 0).toDouble();
           profileImageUrl = data['profileImageUrl'];
+          providerNum = data['userMobile'];
 
           final Timestamp? joinedAt = data['joinedAt'];
           if (joinedAt != null) {
@@ -151,6 +153,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
       final providerEmail = FirebaseAuth.instance.currentUser?.email ?? '';
       final userEmail = data['userEmail'] ?? '';
       final name = data['name'] ?? '';
+      final usernum = data['userMobile'];
       final userSelectedServices = data['services'] ?? [];
       final times = data['times'] ?? [];
       final providerDoc = await FirebaseFirestore.instance
@@ -200,7 +203,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
           .set({
         'userId': userId,
         'userEmail': userEmail,
-        'userMobile': '',
+        'userMobile': usernum,
         'photoURL': profileImageUrl,
         'name': name,
         'userEnd': false,
@@ -212,7 +215,7 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
         'services': filteredServices,
         'times': times,
         'rating': providerRating,
-        'providerMobile': providerData['mobile'] ?? '',
+        'providerMobile': providerNum,
         'isAccepted': true,
         'timestamp': FieldValue.serverTimestamp(),
       });
