@@ -44,8 +44,7 @@ dependencies:
   flutter_rating_bar: ^4.0.1
   cloud_firestore: ^5.6.6
   flutter_credit_card: ^4.1.0
-  phonenumbers: ^1.1.1
-
+  flutter_libphonenumber: ^2.3.1
   pinput: ^5.0.1
   location: ^6.0.2
   google_sign_in: ^6.2.2

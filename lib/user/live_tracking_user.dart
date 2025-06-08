@@ -311,8 +311,8 @@ class _live_track_userState extends State<live_track_user> {
             CircleAvatar(
               backgroundColor: const Color.fromARGB(255, 219, 218, 218),
               radius: 45,
-              backgroundImage: providerData!['profileImageUrl'] != null
-                  ? NetworkImage(providerData!['profileImageUrl'])
+              backgroundImage: providerData!['photoURL'] != null
+                  ? NetworkImage(providerData!['photoURL'])
                   : const AssetImage('assets/profile.jpg') as ImageProvider,
             ),
             const SizedBox(height: 8),

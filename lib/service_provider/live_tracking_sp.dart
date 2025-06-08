@@ -35,6 +35,13 @@ class _live_track_SPState extends State<live_track_SP> {
     _fetchUserData();
   }
 
+  String getInitials(String name) {
+    List<String> names = name.trim().split(" ");
+    String initials = names.isNotEmpty ? names[0][0] : '';
+    if (names.length > 1) initials += names[1][0];
+    return initials.toUpperCase();
+  }
+
   Future<void> _fetchUserData() async {
     try {
       setState(() {
@@ -338,10 +345,19 @@ class _live_track_SPState extends State<live_track_SP> {
       children: [
         const SizedBox(height: 10),
         // User Avatar (default since no profile image in your structure)
-        const CircleAvatar(
-          radius: 40,
-          backgroundColor: Color.fromARGB(255, 219, 218, 218),
-          child: Icon(Icons.person, size: 40, color: Colors.grey),
+        CircleAvatar(
+          radius: 45,
+          backgroundColor: Colors.teal,
+          child: Text(
+            getInitials(
+              userData!['name'] ?? 'Unknown User',
+            ),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 23,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
 
         Text(
