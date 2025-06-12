@@ -17,6 +17,7 @@ import 'package:flutter_application_33/user/search_for_service.dart';
 import 'package:flutter_application_33/user/PhoneNumber.dart';
 import 'package:flutter_application_33/user/chat_with_provider.dart';
 import 'package:flutter_application_33/user/Invoice_user.dart'; // Add this import
+import 'package:flutter_application_33/pop_ups/cancel.dart';
 
 import 'package:flutter_application_33/user/dashboard_user.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -42,19 +43,25 @@ class _live_track_userState extends State<live_track_user> {
   bool isLoading = true;
   String? errorMessage;
   StreamSubscription<DocumentSnapshot>? _acceptedProviderSubscription;
-  String? _documentId; // Store the document ID for monitoring
+  StreamSubscription<QuerySnapshot>? _subscription;
+  StreamSubscription<QuerySnapshot>?
+      _cancellationListener; // Make this non-static
+  String? _documentId;
+  String id = "";
 
   @override
   void initState() {
     super.initState();
     _fetchProviderData();
     _listenForAcceptedProvider();
+    // Call this after you have the user ID
   }
 
   @override
   void dispose() {
     _acceptedProviderSubscription?.cancel();
     _subscription?.cancel();
+    _cancellationListener?.cancel(); // Cancel the instance listener
     super.dispose();
   }
 
@@ -78,19 +85,22 @@ class _live_track_userState extends State<live_track_user> {
       final QuerySnapshot querySnapshot = await _firestore
           .collection('acceptedProviders')
           .where('userId', isEqualTo: currentUser.uid)
-          .limit(1) // Assuming you want the most recent accepted provider
+          .limit(1)
           .get();
+
+      id = currentUser.uid;
+
+      // Start listening for cancellations after we have the user ID
+      _listenForCancellation();
 
       if (querySnapshot.docs.isNotEmpty) {
         final doc = querySnapshot.docs.first;
-        _documentId = doc.id; // Store the document ID
+        _documentId = doc.id;
 
         setState(() {
           providerData = doc.data() as Map<String, dynamic>;
           isLoading = false;
         });
-
-        // Start monitoring the isAccepted field
       } else {
         setState(() {
           errorMessage = "No accepted provider found";
@@ -105,10 +115,10 @@ class _live_track_userState extends State<live_track_user> {
     }
   }
 
-  StreamSubscription<QuerySnapshot>? _subscription;
   void _listenForAcceptedProvider() {
     final user = _auth.currentUser;
     if (user == null) return;
+
     _subscription = FirebaseFirestore.instance
         .collection('acceptedProviders')
         .where('userId', isEqualTo: user.uid)
@@ -120,9 +130,8 @@ class _live_track_userState extends State<live_track_user> {
         final providerData =
             snapshot.docs.first.data() as Map<String, dynamic>?;
         if (providerData != null && mounted) {
-          _subscription?.cancel(); // prevent multiple triggers
+          _subscription?.cancel();
 
-          // Add delay before navigation
           Future.delayed(const Duration(seconds: 2), () {
             if (mounted) {
               Navigator.pushReplacement(
@@ -130,6 +139,46 @@ class _live_track_userState extends State<live_track_user> {
                 MaterialPageRoute(
                   builder: (context) => Invoice_user(),
                 ),
+              );
+            }
+          });
+        }
+      }
+    });
+  }
+
+// Make this non-static and instance-based
+  void _listenForCancellation() {
+    if (id.isEmpty) return;
+
+    _cancellationListener?.cancel(); // Cancel any existing listener
+
+    // Listen to acceptedProviders collection instead - watch for documents being deleted/moved
+    _cancellationListener = FirebaseFirestore.instance
+        .collection('acceptedProviders')
+        .where('userId', isEqualTo: id)
+        .snapshots()
+        .listen((QuerySnapshot snapshot) {
+      // Check if the user's accepted service was removed (indicating cancellation)
+      if (snapshot.docs.isEmpty && providerData != null) {
+        // The document was removed, which means it was moved to history (canceled)
+        if (mounted) {
+          // Show notification
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Your service has been canceled'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+
+          // Navigate after a small delay
+          Future.delayed(Duration(milliseconds: 500), () {
+            if (mounted) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => user_dashboard()),
+                (Route<dynamic> route) => false,
               );
             }
           });
@@ -181,7 +230,7 @@ class _live_track_userState extends State<live_track_user> {
                           clipBehavior: Clip.none,
                           children: [
                             Container(
-                              height: 230,
+                              height: 270,
                               width: 350,
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -196,7 +245,9 @@ class _live_track_userState extends State<live_track_user> {
                                       right: 0,
                                       child: IconButton(
                                         color: Colors.red,
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          showCancelDialog(context, id);
+                                        },
                                         icon: const Icon(Icons.cancel),
                                       ),
                                     ),
@@ -303,112 +354,117 @@ class _live_track_userState extends State<live_track_user> {
       );
     }
 
-    return Row(
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        const SizedBox(height: 20),
+        Row(
           children: [
-            CircleAvatar(
-              backgroundColor: const Color.fromARGB(255, 219, 218, 218),
-              radius: 45,
-              backgroundImage: providerData!['photoURL'] != null
-                  ? NetworkImage(providerData!['photoURL'])
-                  : const AssetImage('assets/profile.jpg') as ImageProvider,
-            ),
-            const SizedBox(height: 8),
-            RatingBarIndicator(
-              rating: providerData!['rating']?.toDouble() ?? 0.0,
-              itemBuilder: (context, index) => Icon(
-                Icons.star,
-                color: Colors.amber,
-              ),
-              itemCount: 5,
-              itemSize: 20.0,
-              direction: Axis.horizontal,
-            ),
-          ],
-        ),
-        const SizedBox(width: 30),
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                providerData!['username'] ?? 'Unknown Provider',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromRGBO(22, 121, 171, 1.0),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  backgroundColor: const Color.fromARGB(255, 219, 218, 218),
+                  radius: 45,
+                  backgroundImage: providerData!['photoURL'] != null
+                      ? NetworkImage(providerData!['photoURL'])
+                      : const AssetImage('assets/profile.jpg') as ImageProvider,
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                _getServicesText(),
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Color.fromRGBO(22, 121, 171, 1.0),
+                const SizedBox(height: 8),
+                RatingBarIndicator(
+                  rating: providerData!['rating']?.toDouble() ?? 0.0,
+                  itemBuilder: (context, index) => Icon(
+                    Icons.star,
+                    color: Colors.amber,
+                  ),
+                  itemCount: 5,
+                  itemSize: 20.0,
+                  direction: Axis.horizontal,
                 ),
-              ),
-              const SizedBox(height: 20),
-              Row(
+              ],
+            ),
+            const SizedBox(width: 30),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Card(
-                    child: IconButton(
-                      onPressed: () {
-                        // Navigate to chat/message screen
-                        if (providerData!['providerId'] != null &&
-                            providerData!['name'] != null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ChatScreen(
-                                receiverUserID: providerData!['providerId'],
-                                receiverName: providerData!['name'],
-                              ),
-                            ),
-                          );
-                        } else {
-                          print(
-                              "${providerData!['providerId']}${providerData!['providerEmail']}");
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.message_rounded,
-                        color: Color.fromRGBO(22, 121, 171, 1.0),
-                      ),
+                  Text(
+                    providerData!['username'] ?? 'Unknown Provider',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromRGBO(22, 121, 171, 1.0),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Card(
-                    child: IconButton(
-                      onPressed: () async {
-                        try {
-                          await Clipboard.setData(ClipboardData(
-                              text: providerData!['providerMobile']));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content:
-                                    Text('Phone number copied successfully!')),
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('Failed to copy Phone number')),
-                          );
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.call,
-                        color: Color.fromRGBO(22, 121, 171, 1.0),
-                      ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _getServicesText(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color.fromRGBO(22, 121, 171, 1.0),
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-        )
+            )
+          ],
+        ),
+        const SizedBox(height: 40),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Card(
+              child: IconButton(
+                onPressed: () {
+                  // Navigate to chat/message screen
+                  if (providerData!['providerId'] != null &&
+                      providerData!['name'] != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          receiverUserID: providerData!['providerId'],
+                          receiverName: providerData!['name'],
+                        ),
+                      ),
+                    );
+                  } else {
+                    print(
+                        "${providerData!['providerId']}${providerData!['providerEmail']}");
+                  }
+                },
+                icon: const Icon(
+                  Icons.message_rounded,
+                  color: Color.fromRGBO(22, 121, 171, 1.0),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Card(
+              child: IconButton(
+                onPressed: () async {
+                  try {
+                    await Clipboard.setData(
+                        ClipboardData(text: providerData!['providerMobile']));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text('Phone number copied successfully!')),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to copy Phone number')),
+                    );
+                  }
+                },
+                icon: const Icon(
+                  Icons.call,
+                  color: Color.fromRGBO(22, 121, 171, 1.0),
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }

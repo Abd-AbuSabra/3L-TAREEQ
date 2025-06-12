@@ -421,7 +421,7 @@ class _invoice_SPState extends State<invoice_SP> {
                             ),
                           ),
                           ...buildServiceItems(),
-                          const SizedBox(height: 400),
+                          const SizedBox(height: 70),
                           ElevatedButton(
                             onPressed: () {
                               updateProviderEnd();

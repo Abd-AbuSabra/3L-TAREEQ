@@ -174,6 +174,7 @@ class _Services_SPState extends State<Services_SP>
                                   final money = data['providerEarnings'] ?? 0;
                                   final completedAt =
                                       data['completedAt'] as Timestamp?;
+                                  final status = data['status'] as String?;
                                   final totalWithTax =
                                       calculateTotalWithTax(services);
 
@@ -246,7 +247,9 @@ class _Services_SPState extends State<Services_SP>
                                                     ),
                                                   ),
                                                   Text(
-                                                    '\$${entry.value}',
+                                                    status == 'canceled'
+                                                        ? '\$0'
+                                                        : '\$${entry.value}',
                                                     style: const TextStyle(
                                                       fontSize: 14,
                                                       color: Colors.white70,
@@ -276,7 +279,9 @@ class _Services_SPState extends State<Services_SP>
                                                 ),
                                               ),
                                               Text(
-                                                '${money.toStringAsFixed(2)} JD',
+                                                status == 'canceled'
+                                                    ? '0.00 JD'
+                                                    : '${money.toStringAsFixed(2)} JD',
                                                 style: TextStyle(
                                                   fontSize: 18,
                                                   fontWeight: FontWeight.bold,
@@ -286,11 +291,26 @@ class _Services_SPState extends State<Services_SP>
                                             ],
                                           ),
                                           const SizedBox(height: 10),
-                                          Text(
-                                            'Completed: ${formatDate(completedAt)}',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.white60,
+                                          // Status display - either Completed or Canceled
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: status == 'canceled'
+                                                  ? Colors.red
+                                                  : Colors.green,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              status == 'canceled'
+                                                  ? 'Canceled: ${formatDate(data['movedToHistoryAt'] as Timestamp?)}'
+                                                  : 'Completed: ${formatDate(completedAt)}',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                             ),
                                           ),
                                         ],

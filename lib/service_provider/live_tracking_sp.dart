@@ -10,6 +10,8 @@ import 'package:flutter_application_33/service_provider/chat_with_user.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_33/Gemini/gemini_page.dart';
 import 'package:flutter_application_33/user/login.dart';
+import 'package:flutter_application_33/pop_ups/cancel_sp.dart';
+import 'dart:async';
 
 const Color customGreen = Color(0xFF00A86B);
 
@@ -28,11 +30,21 @@ class _live_track_SPState extends State<live_track_SP> {
   String? documentId;
   bool isLoading = true;
   String? errorMessage;
+  String id = "";
+  StreamSubscription<QuerySnapshot>?
+      _cancellationListener; // Make this non-static
 
   @override
   void initState() {
     super.initState();
     _fetchUserData();
+    // Don't call the listener here - call it after getting the provider ID
+  }
+
+  @override
+  void dispose() {
+    _cancellationListener?.cancel(); // Cancel the instance listener
+    super.dispose();
   }
 
   String getInitials(String name) {
@@ -63,15 +75,19 @@ class _live_track_SPState extends State<live_track_SP> {
           .collection('acceptedProviders')
           .where('providerId', isEqualTo: currentUser.uid)
           .where('isAccepted', isEqualTo: true)
-          //  .orderBy('times', descending: true) // Get the most recent
           .limit(1)
           .get();
+
+      id = currentUser.uid;
+
+      // Start listening for cancellations after we have the provider ID
+      _listenForCancellation();
 
       if (querySnapshot.docs.isNotEmpty) {
         final doc = querySnapshot.docs.first;
         setState(() {
           userData = doc.data() as Map<String, dynamic>;
-          documentId = doc.id; // Store document ID for updates
+          documentId = doc.id;
           isLoading = false;
         });
       } else {
@@ -96,7 +112,7 @@ class _live_track_SPState extends State<live_track_SP> {
             .collection('acceptedProviders')
             .doc(documentId)
             .update({
-          'isAccepted': false, // or add a 'completed' field
+          'isAccepted': false,
           'completedAt': FieldValue.serverTimestamp(),
         });
 
@@ -130,6 +146,46 @@ class _live_track_SPState extends State<live_track_SP> {
     return serviceList.isEmpty ? 'Service details' : serviceList.join(', ');
   }
 
+// Make this non-static and instance-based
+  void _listenForCancellation() {
+    if (id.isEmpty) return;
+
+    _cancellationListener?.cancel(); // Cancel any existing listener
+
+    // Listen to acceptedProviders collection instead - watch for documents being deleted/moved
+    _cancellationListener = FirebaseFirestore.instance
+        .collection('acceptedProviders')
+        .where('providerId', isEqualTo: id)
+        .snapshots()
+        .listen((QuerySnapshot snapshot) {
+      // Check if the user's accepted service was removed (indicating cancellation)
+      if (snapshot.docs.isEmpty && userData != null) {
+        // The document was removed, which means it was moved to history (canceled)
+        if (mounted) {
+          // Show notification
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Your service has been canceled'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+
+          // Navigate after a small delay
+          Future.delayed(Duration(milliseconds: 500), () {
+            if (mounted) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => Dashboard_SP()),
+                (Route<dynamic> route) => false,
+              );
+            }
+          });
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -160,7 +216,7 @@ class _live_track_SPState extends State<live_track_SP> {
                               clipBehavior: Clip.none,
                               children: [
                                 Container(
-                                  height: 300,
+                                  height: 360,
                                   width: 350,
                                   decoration: BoxDecoration(
                                     color: Colors.white,
@@ -175,7 +231,9 @@ class _live_track_SPState extends State<live_track_SP> {
                                           right: 0,
                                           child: IconButton(
                                             color: Colors.red,
-                                            onPressed: () {},
+                                            onPressed: () {
+                                              showCancelDialog_SP(context, id);
+                                            },
                                             icon: const Icon(Icons.cancel),
                                           ),
                                         ),
@@ -292,7 +350,7 @@ class _live_track_SPState extends State<live_track_SP> {
         const SizedBox(height: 10),
         // User Avatar (default since no profile image in your structure)
         CircleAvatar(
-          radius: 45,
+          radius: 35,
           backgroundColor: Colors.teal,
           child: Text(
             getInitials(
@@ -322,7 +380,7 @@ class _live_track_SPState extends State<live_track_SP> {
             color: Colors.grey,
           ),
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: 20),
         if (userData!['name'] != null)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -378,7 +436,7 @@ class _live_track_SPState extends State<live_track_SP> {
               ),
             ],
           ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

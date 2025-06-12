@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_33/Gemini/gemini_page.dart';
+import 'package:flutter_application_33/Gemini/gemini_page2.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_application_33/user/select_service_provider.dart';
@@ -124,7 +124,7 @@ class _LoadingState extends State<Loading> {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              GeminiPage(), // Replace with your target page
+                              GeminiPage2(), // Replace with your target page
                         ),
                       );
                     },

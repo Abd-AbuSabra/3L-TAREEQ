@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_application_33/universal_components/project_logo.dart';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter_application_33/service_provider/dashboard_SP.dart';
 
 class Pricing extends StatefulWidget {
   final List<String> selectedServices;
@@ -189,8 +190,12 @@ class _PricingState extends State<Pricing> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("You are now a service provider!")),
       );
-
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Dashboard_SP(),
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error saving pricing: $e")),
@@ -319,103 +324,106 @@ class _PricingState extends State<Pricing> {
         backgroundColor: Colors.white,
         body: Column(
           children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    SizedBox(height: 15),
-                    Container(height: 60, width: 60, child: logo()),
-                    SizedBox(height: 10),
-                    Padding(
-                      padding: const EdgeInsets.all(30.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            "We are happy to inform \n that you're a part of our community",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color.fromRGBO(22, 121, 171, 1.0),
-                            ),
-                          )
-                        ],
-                      ),
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  SizedBox(height: 15),
+                  Container(height: 60, width: 60, child: logo()),
+                  SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.all(30.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          "We are happy to inform \n that you're a part of our community",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromRGBO(22, 121, 171, 1.0),
+                          ),
+                        )
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            ClipRRect(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(50),
-                topRight: Radius.circular(50),
-              ),
-              child: Container(
-                width: double.infinity,
-                color: Color.fromRGBO(22, 121, 171, 1.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 50),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Text(
-                        "Please price your \nservices below:",
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 25,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    SizedBox(height: 40),
-                    Column(
-                      children: widget.selectedServices
-                          .asMap()
-                          .map((index, service) {
-                            return MapEntry(
-                              index,
-                              _buildServiceCard(
-                                  service,
-                                  _priceControllers[service]!,
-                                  index + 1), // 1-based index
-                            );
-                          })
-                          .values
-                          .toList(),
-                    ),
-                    SizedBox(height: 200),
-                    Center(
-                      child: ElevatedButton(
-                        onPressed: isLoading ? null : _submitPricing,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 7, 40, 89),
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 150, vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(50),
+                  topRight: Radius.circular(50),
+                ),
+                child: Container(
+                  width: double.infinity,
+                  color: Color.fromRGBO(22, 121, 171, 1.0),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 50),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Text(
+                            "Please price your \nservices below:",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
-                        child: isLoading
-                            ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                'Done',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18),
+                        SizedBox(height: 40),
+                        Column(
+                          children: widget.selectedServices
+                              .asMap()
+                              .map((index, service) {
+                                return MapEntry(
+                                  index,
+                                  _buildServiceCard(
+                                      service,
+                                      _priceControllers[service]!,
+                                      index + 1), // 1-based index
+                                );
+                              })
+                              .values
+                              .toList(),
+                        ),
+                        SizedBox(height: 50),
+                        Center(
+                          child: ElevatedButton(
+                            onPressed: isLoading ? null : _submitPricing,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color.fromARGB(255, 7, 40, 89),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 150, vertical: 15),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                      ),
+                            ),
+                            child: isLoading
+                                ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(
+                                    'Done',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18),
+                                  ),
+                          ),
+                        ),
+                        SizedBox(height: 50),
+                      ],
                     ),
-                    SizedBox(height: 50),
-                  ],
+                  ),
                 ),
               ),
             ),

@@ -471,9 +471,6 @@ class _Dashboard_SPState extends State<Dashboard_SP> {
                                   color: Color(0xFF083B6F),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18)),
-                          const SizedBox(height: 8),
-                          Text("ETA: $times",
-                              style: const TextStyle(color: Colors.grey)),
                           const SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,

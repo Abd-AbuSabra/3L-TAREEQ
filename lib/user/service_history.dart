@@ -38,7 +38,12 @@ class _ServicesState extends State<Services> with TickerProviderStateMixin {
   }
 
   // Method to calculate total price with tax
-  double calculateTotalWithTax(Map<String, dynamic> services) {
+  double calculateTotalWithTax(Map<String, dynamic> services, String? status) {
+    // If service is canceled, return 0
+    if (status == 'canceled') {
+      return 0.0;
+    }
+
     double total = 0;
     services.forEach((key, value) {
       if (value is num) {
@@ -162,8 +167,9 @@ class _ServicesState extends State<Services> with TickerProviderStateMixin {
                                       data['username'] ?? 'Unknown User';
                                   final completedAt =
                                       data['completedAt'] as Timestamp?;
+                                  final status = data['status'] as String?;
                                   final totalWithTax =
-                                      calculateTotalWithTax(services);
+                                      calculateTotalWithTax(services, status);
 
                                   final int index = docs.indexOf(doc);
                                   final bool isEven = index % 2 == 0;
@@ -234,7 +240,9 @@ class _ServicesState extends State<Services> with TickerProviderStateMixin {
                                                     ),
                                                   ),
                                                   Text(
-                                                    '\$${entry.value}',
+                                                    status == 'canceled'
+                                                        ? '\$0'
+                                                        : '\$${entry.value}',
                                                     style: const TextStyle(
                                                       fontSize: 14,
                                                       color: Colors.white70,
@@ -274,11 +282,26 @@ class _ServicesState extends State<Services> with TickerProviderStateMixin {
                                             ],
                                           ),
                                           const SizedBox(height: 10),
-                                          Text(
-                                            'Completed: ${formatDate(completedAt)}',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.white60,
+                                          // Status display - either Completed or Canceled
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: status == 'canceled'
+                                                  ? Colors.red
+                                                  : Colors.green,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              status == 'canceled'
+                                                  ? 'Canceled: ${formatDate(data['movedToHistoryAt'] as Timestamp?)}'
+                                                  : 'Completed: ${formatDate(completedAt)}',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                             ),
                                           ),
                                         ],

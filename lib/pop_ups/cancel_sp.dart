@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_33/user/dashboard_user.dart';
 import 'package:flutter_application_33/user/login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application_33/service_provider/dashboard_SP.dart';
@@ -15,7 +14,7 @@ Future<bool> moveToHistory(String userId) async {
     // Query the acceptedProviders collection for the document with matching userId
     QuerySnapshot acceptedProvidersQuery = await _firestore
         .collection('acceptedProviders')
-        .where('userId', isEqualTo: userId)
+        .where('providerId', isEqualTo: userId)
         .get();
 
     if (acceptedProvidersQuery.docs.isEmpty) {
@@ -50,7 +49,7 @@ Future<bool> moveToHistory(String userId) async {
 }
 
 // Updated dialog function that calls moveToHistory
-void showCancelDialog(BuildContext context, String userId) {
+void showCancelDialog_SP(BuildContext context, String userId) {
   showDialog(
     context: context,
     barrierDismissible: false,
@@ -110,14 +109,12 @@ void showCancelDialog(BuildContext context, String userId) {
                       ),
                     ),
                     onPressed: () async {
-                      // Call moveToHistory function with the actual logic
-                      moveToHistory(userId);
+                      bool success = await moveToHistory(userId);
 
-                      // Navigate to Dashboard_SP on success
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => user_dashboard(),
+                          builder: (context) => Dashboard_SP(),
                         ),
                       );
 
