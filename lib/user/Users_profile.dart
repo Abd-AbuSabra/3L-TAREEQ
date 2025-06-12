@@ -284,37 +284,46 @@ class _users_profileState extends State<users_profile> {
                                 ),
                               );
                             }
-
-                            // Get the latest service data
+// Get the latest service data
                             final doc = snapshot.data!.docs.first;
                             final data = doc.data() as Map<String, dynamic>;
 
                             final name = data['username'] as String? ?? "";
-
                             final services =
                                 data['services'] as Map<String, dynamic>? ?? {};
                             final completedAt =
                                 data['completedAt'] as Timestamp?;
                             final movedToHistoryAt =
                                 data['movedToHistoryAt'] as Timestamp?;
-                            final totalWithTax =
-                                calculateTotalWithTax(services);
+                            final status =
+                                (data['status'] as String?)?.toUpperCase() ??
+                                    'COMPLETED';
 
-                            // Get the first service name (or total count)
+// Determine if service was canceled
+                            final isCanceled = status == 'CANCELED';
+                            final totalWithTax = isCanceled
+                                ? 0.00
+                                : calculateTotalWithTax(services);
+
+// Get the first service name (or total count)
                             String serviceDisplay = services.isEmpty
                                 ? 'No services'
                                 : services.length == 1
                                     ? services.keys.first
                                     : '${services.length} services';
 
+// Set colors based on status
+                            final statusColor =
+                                isCanceled ? Colors.red : Colors.green;
+                            final statusText =
+                                isCanceled ? 'CANCELED' : 'COMPLETED';
+
                             return GestureDetector(
                               onTap: () {
-                                // Navigate to another page - replace YourDestinationPage with your actual page
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => Services(),
-                                  ),
+                                      builder: (context) => Services()),
                                 );
                               },
                               child: Container(
@@ -339,33 +348,32 @@ class _users_profileState extends State<users_profile> {
                                           color: Colors.white,
                                         ),
                                       ),
-                                      SizedBox(
-                                        height: 8,
-                                      ),
+                                      const SizedBox(height: 8),
                                       Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
                                             name,
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.white,
                                             ),
                                           ),
                                           Container(
-                                            margin: EdgeInsets.only(left: 1),
+                                            margin:
+                                                const EdgeInsets.only(left: 1),
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 4, vertical: 3),
                                             decoration: BoxDecoration(
-                                              color: Colors.green,
+                                              color: statusColor,
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                             ),
-                                            child: const Text(
-                                              'COMPLETED',
-                                              style: TextStyle(
+                                            child: Text(
+                                              statusText,
+                                              style: const TextStyle(
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.white,

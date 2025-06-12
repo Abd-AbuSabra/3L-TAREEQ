@@ -323,18 +323,25 @@ class _SP_profileState extends State<SP_profile> {
                                     data['completedAt'] as Timestamp?;
                                 final movedToHistoryAt =
                                     data['movedToHistoryAt'] as Timestamp?;
-                                final money = data['providerEarnings'] ?? 0;
+                                final money =
+                                    (data['providerEarnings'] ?? 0).toDouble();
 
-                                // Get the first service name (or total count)
-                                String serviceDisplay = services.isEmpty
+// Determine service display
+                                final serviceDisplay = services.isEmpty
                                     ? 'No services'
                                     : services.length == 1
                                         ? services.keys.first
                                         : '${services.length} services';
 
+// Handle status
+                                final isCanceled = data['status'] == "canceled";
+                                final statusColor =
+                                    isCanceled ? Colors.red : Colors.green;
+                                final statusText =
+                                    isCanceled ? 'CANCELED' : 'COMPLETED';
+
                                 return GestureDetector(
                                   onTap: () {
-                                    // Navigate to another page - replace YourDestinationPage with your actual page
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -349,12 +356,9 @@ class _SP_profileState extends State<SP_profile> {
                                       color:
                                           const Color.fromARGB(255, 7, 40, 89),
                                       borderRadius: BorderRadius.circular(20),
-                                      // Add a subtle shadow to indicate it's pressable
                                       boxShadow: [
                                         BoxShadow(
-                                          color:
-                                              const Color.fromARGB(255, 0, 0, 0)
-                                                  .withOpacity(0.1),
+                                          color: Colors.black.withOpacity(0.1),
                                           blurRadius: 10,
                                           offset: const Offset(0, 6),
                                         ),
@@ -379,29 +383,33 @@ class _SP_profileState extends State<SP_profile> {
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text(
-                                                name,
-                                                style: const TextStyle(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
+                                              Expanded(
+                                                child: Text(
+                                                  name,
+                                                  style: const TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ),
                                               Container(
                                                 margin: const EdgeInsets.only(
-                                                    left: 1),
+                                                    left: 8),
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                        horizontal: 4,
-                                                        vertical: 3),
+                                                        horizontal: 6,
+                                                        vertical: 4),
                                                 decoration: BoxDecoration(
-                                                  color: Colors.green,
+                                                  color: statusColor,
                                                   borderRadius:
                                                       BorderRadius.circular(8),
                                                 ),
-                                                child: const Text(
-                                                  'COMPLETED',
-                                                  style: TextStyle(
+                                                child: Text(
+                                                  statusText,
+                                                  style: const TextStyle(
                                                     fontSize: 10,
                                                     fontWeight: FontWeight.bold,
                                                     color: Colors.white,
@@ -415,9 +423,9 @@ class _SP_profileState extends State<SP_profile> {
                                             serviceDisplay,
                                             style: const TextStyle(
                                               fontSize: 14,
-                                              color: const Color.fromRGBO(
-                                                  22, 121, 171, 1.0),
                                               fontWeight: FontWeight.w600,
+                                              color: Color.fromRGBO(
+                                                  22, 121, 171, 1.0),
                                             ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -439,9 +447,10 @@ class _SP_profileState extends State<SP_profile> {
                                                 formatDate(completedAt ??
                                                     movedToHistoryAt),
                                                 style: const TextStyle(
-                                                    fontSize: 13,
-                                                    color: const Color.fromRGBO(
-                                                        22, 121, 171, 1.0)),
+                                                  fontSize: 13,
+                                                  color: Color.fromRGBO(
+                                                      22, 121, 171, 1.0),
+                                                ),
                                               ),
                                             ],
                                           ),
