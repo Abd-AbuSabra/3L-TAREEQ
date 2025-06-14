@@ -23,7 +23,7 @@ class _Invoice_userState extends State<Invoice_user> {
   bool isLoading = true;
   String? errorMessage;
   double taxAmount = 0;
-
+  String username = "";
   @override
   void initState() {
     super.initState();
@@ -62,6 +62,7 @@ class _Invoice_userState extends State<Invoice_user> {
         if (mounted) {
           setState(() {
             providerName = acceptedData['username'] ?? 'Unknown Provider';
+            username = acceptedData['name'] ?? 'Unknown Provider';
             providerId = acceptedData['providerId'] ?? 'Unknown Provider';
             providerLocation =
                 acceptedData['providerLocation'] ?? 'Location not available';
@@ -263,7 +264,7 @@ class _Invoice_userState extends State<Invoice_user> {
       showDialog(
         context: context,
         builder: (_) => Rating_popup(
-          username: providerName,
+          username: username,
           providerId: providerId,
         ),
       );

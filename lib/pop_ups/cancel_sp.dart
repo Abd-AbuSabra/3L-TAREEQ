@@ -6,7 +6,7 @@ import 'package:flutter_application_33/service_provider/dashboard_SP.dart';
 // Add the missing Firestore instance
 final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-Future<bool> moveToHistory(String userId) async {
+Future<bool> moveToHistory(String providerId) async {
   try {
     // Start a batch write to ensure atomicity
     WriteBatch batch = _firestore.batch();
@@ -14,11 +14,11 @@ Future<bool> moveToHistory(String userId) async {
     // Query the acceptedProviders collection for the document with matching userId
     QuerySnapshot acceptedProvidersQuery = await _firestore
         .collection('acceptedProviders')
-        .where('providerId', isEqualTo: userId)
+        .where('providerId', isEqualTo: providerId)
         .get();
 
     if (acceptedProvidersQuery.docs.isEmpty) {
-      print('No document found with userId: $userId');
+      print('No document found with userId: $providerId');
       return false;
     }
 
@@ -40,7 +40,7 @@ Future<bool> moveToHistory(String userId) async {
     // Commit the batch
     await batch.commit();
 
-    print('Successfully moved document to history for userId: $userId');
+    print('Successfully moved document to history for userId: $providerId');
     return true;
   } catch (e) {
     print('Error moving document to history: $e');

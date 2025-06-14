@@ -26,13 +26,14 @@ class _users_profileState extends State<users_profile> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Method to get latest service from history for current user
-  Stream<QuerySnapshot> getLatestService() {
+  Stream<QuerySnapshot> getLatestServiceRobust() {
     User? currentUser = _auth.currentUser;
     if (currentUser != null) {
       return _firestore
           .collection('history')
           .where('userId', isEqualTo: currentUser.uid)
-          .limit(1) // Get only the most recent one
+          .orderBy('movedToHistoryAt', descending: true) // Primary sort
+          .limit(1)
           .snapshots();
     }
     return const Stream.empty();
@@ -204,7 +205,7 @@ class _users_profileState extends State<users_profile> {
                         padding: const EdgeInsets.only(
                             top: 5.0, left: 20, right: 20, bottom: 10),
                         child: StreamBuilder<QuerySnapshot>(
-                          stream: getLatestService(),
+                          stream: getLatestServiceRobust(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
@@ -288,31 +289,25 @@ class _users_profileState extends State<users_profile> {
                             final doc = snapshot.data!.docs.first;
                             final data = doc.data() as Map<String, dynamic>;
 
-                            final name = data['username'] as String? ?? "";
+                            final name = data['name'] as String? ?? "";
                             final services =
                                 data['services'] as Map<String, dynamic>? ?? {};
                             final completedAt =
                                 data['completedAt'] as Timestamp?;
                             final movedToHistoryAt =
                                 data['movedToHistoryAt'] as Timestamp?;
-                            final status =
-                                (data['status'] as String?)?.toUpperCase() ??
-                                    'COMPLETED';
+                            final money =
+                                (data['providerEarnings'] ?? 0).toDouble();
 
-// Determine if service was canceled
-                            final isCanceled = status == 'CANCELED';
-                            final totalWithTax = isCanceled
-                                ? 0.00
-                                : calculateTotalWithTax(services);
-
-// Get the first service name (or total count)
-                            String serviceDisplay = services.isEmpty
+// Determine service display
+                            final serviceDisplay = services.isEmpty
                                 ? 'No services'
                                 : services.length == 1
                                     ? services.keys.first
                                     : '${services.length} services';
 
-// Set colors based on status
+// Handle status
+                            final isCanceled = data['status'] == "canceled";
                             final statusColor =
                                 isCanceled ? Colors.red : Colors.green;
                             final statusText =
@@ -399,7 +394,7 @@ class _users_profileState extends State<users_profile> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            'Total: ${totalWithTax.toStringAsFixed(2)} JD',
+                                            'Total: ${money.toStringAsFixed(2)} JD',
                                             style: const TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.bold,

@@ -73,7 +73,7 @@ class _ServiceProviderPageState extends State<ServiceProviderPage> {
     final services = Map<String, dynamic>.from(
       widget.providerData['services'] ?? {},
     );
-    final providerId = widget.providerData['uid'] ?? '';
+    final providerId = widget.providerData['providerId'] ?? '';
 
     final rawRating = widget.providerData['rating'];
     double avgRating;

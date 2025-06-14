@@ -12,6 +12,7 @@ import 'package:flutter_application_33/Gemini/gemini_page.dart';
 import 'package:flutter_application_33/user/login.dart';
 import 'package:flutter_application_33/pop_ups/cancel_sp.dart';
 import 'dart:async';
+import 'package:flutter_application_33/universal_components/cancellation_service.dart';
 
 const Color customGreen = Color(0xFF00A86B);
 
@@ -31,19 +32,17 @@ class _live_track_SPState extends State<live_track_SP> {
   bool isLoading = true;
   String? errorMessage;
   String id = "";
-  StreamSubscription<QuerySnapshot>?
-      _cancellationListener; // Make this non-static
+  StreamSubscription<QuerySnapshot>? _cancellationListener;
 
   @override
   void initState() {
     super.initState();
     _fetchUserData();
-    // Don't call the listener here - call it after getting the provider ID
   }
 
   @override
   void dispose() {
-    _cancellationListener?.cancel(); // Cancel the instance listener
+    _cancellationListener?.cancel();
     super.dispose();
   }
 
@@ -66,9 +65,13 @@ class _live_track_SPState extends State<live_track_SP> {
         setState(() {
           errorMessage = "Service provider not authenticated";
           isLoading = false;
+          // Don't set id here - currentUser is null!
         });
         return;
       }
+
+      // Set the provider ID AFTER confirming user is not null
+      id = currentUser.uid;
 
       // Query the acceptedProviders collection where the current user is the provider
       final QuerySnapshot querySnapshot = await _firestore
@@ -78,11 +81,6 @@ class _live_track_SPState extends State<live_track_SP> {
           .limit(1)
           .get();
 
-      id = currentUser.uid;
-
-      // Start listening for cancellations after we have the provider ID
-      _listenForCancellation();
-
       if (querySnapshot.docs.isNotEmpty) {
         final doc = querySnapshot.docs.first;
         setState(() {
@@ -90,6 +88,9 @@ class _live_track_SPState extends State<live_track_SP> {
           documentId = doc.id;
           isLoading = false;
         });
+
+        // Start listening for cancellations AFTER we have data and id is set
+        _listenForCancellation();
       } else {
         setState(() {
           errorMessage = "No active service found";
@@ -146,41 +147,42 @@ class _live_track_SPState extends State<live_track_SP> {
     return serviceList.isEmpty ? 'Service details' : serviceList.join(', ');
   }
 
-// Make this non-static and instance-based
   void _listenForCancellation() {
     if (id.isEmpty) return;
 
-    _cancellationListener?.cancel(); // Cancel any existing listener
+    _cancellationListener?.cancel();
 
-    // Listen to acceptedProviders collection instead - watch for documents being deleted/moved
+    // Store the current time when we start listening
+    final startListeningTime = DateTime.now();
+
     _cancellationListener = FirebaseFirestore.instance
-        .collection('acceptedProviders')
+        .collection('history')
         .where('providerId', isEqualTo: id)
+        .where('status', isEqualTo: 'canceled')
         .snapshots()
         .listen((QuerySnapshot snapshot) {
-      // Check if the user's accepted service was removed (indicating cancellation)
-      if (snapshot.docs.isEmpty && userData != null) {
-        // The document was removed, which means it was moved to history (canceled)
-        if (mounted) {
-          // Show notification
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Your service has been canceled'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
-            ),
-          );
+      for (var change in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.added && mounted) {
+          // Check if this document was created after we started listening
+          final docData = change.doc.data() as Map<String, dynamic>;
+          final docTimestamp =
+              (docData['movedToHistoryAt'] as Timestamp?)?.toDate();
 
-          // Navigate after a small delay
-          Future.delayed(Duration(milliseconds: 500), () {
-            if (mounted) {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => Dashboard_SP()),
-                (Route<dynamic> route) => false,
-              );
-            }
-          });
+          if (docTimestamp != null &&
+              docTimestamp.isAfter(startListeningTime)) {
+            // This is a genuine new cancellation
+
+            Future.delayed(Duration(milliseconds: 500), () {
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => Dashboard_SP()),
+                  (Route<dynamic> route) => false,
+                );
+              }
+            });
+            break;
+          }
         }
       }
     });

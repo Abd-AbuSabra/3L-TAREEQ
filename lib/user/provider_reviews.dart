@@ -29,21 +29,22 @@ class _ProviderReviewsPageState extends State<ProviderReviewsPage>
           .collection('providers')
           .doc(widget.providerId)
           .collection('reviews')
-          .orderBy('timestamp', descending: true)
           .get();
 
-      final fetchedReviews = snapshot.docs
-          .where((doc) => doc.exists && doc.data().isNotEmpty)
-          .map((doc) {
+      final fetchedReviews = snapshot.docs.asMap().entries.map((entry) {
+        final index = entry.key;
+        final doc = entry.value;
         final data = doc.data();
+
         final username = data['username'] ?? '??';
+
         return {
           'initials': username.length >= 2
               ? username.substring(0, 2).toUpperCase()
               : username.toUpperCase(),
-          'color': Colors.primaries[reviews.length % Colors.primaries.length],
+          'color': Colors.primaries[index % Colors.primaries.length],
           'text': data['text'] ?? '',
-          'rating': data['rating'] ?? 0,
+          'rating': (data['rating'] ?? 0).toDouble(),
         };
       }).toList();
 
@@ -51,9 +52,12 @@ class _ProviderReviewsPageState extends State<ProviderReviewsPage>
         reviews = fetchedReviews;
         isLoading = false;
       });
+
+      print('Fetched ${fetchedReviews.length} reviews');
     } catch (e) {
       print('Error fetching reviews: $e');
       setState(() {
+        reviews = [];
         isLoading = false;
       });
     }

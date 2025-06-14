@@ -151,37 +151,46 @@ class _live_track_userState extends State<live_track_user> {
   void _listenForCancellation() {
     if (id.isEmpty) return;
 
-    _cancellationListener?.cancel(); // Cancel any existing listener
+    _cancellationListener?.cancel();
 
-    // Listen to acceptedProviders collection instead - watch for documents being deleted/moved
+    // Store the current time when we start listening
+    final startListeningTime = DateTime.now();
+
     _cancellationListener = FirebaseFirestore.instance
-        .collection('acceptedProviders')
+        .collection('history')
         .where('userId', isEqualTo: id)
+        .where('status', isEqualTo: 'canceled')
         .snapshots()
         .listen((QuerySnapshot snapshot) {
-      // Check if the user's accepted service was removed (indicating cancellation)
-      if (snapshot.docs.isEmpty && providerData != null) {
-        // The document was removed, which means it was moved to history (canceled)
-        if (mounted) {
-          // Show notification
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Your service has been canceled'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
-            ),
-          );
+      for (var change in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.added && mounted) {
+          // Check if this document was created after we started listening
+          final docData = change.doc.data() as Map<String, dynamic>;
+          final docTimestamp =
+              (docData['movedToHistoryAt'] as Timestamp?)?.toDate();
 
-          // Navigate after a small delay
-          Future.delayed(Duration(milliseconds: 500), () {
-            if (mounted) {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => user_dashboard()),
-                (Route<dynamic> route) => false,
-              );
-            }
-          });
+          if (docTimestamp != null &&
+              docTimestamp.isAfter(startListeningTime)) {
+            // This is a genuine new cancellation
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Your service has been canceled'),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 3),
+              ),
+            );
+
+            Future.delayed(Duration(milliseconds: 500), () {
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => user_dashboard()),
+                  (Route<dynamic> route) => false,
+                );
+              }
+            });
+            break;
+          }
         }
       }
     });
